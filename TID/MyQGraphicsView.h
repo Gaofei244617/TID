@@ -1,0 +1,52 @@
+#pragma once
+
+#include <QGraphicsView>
+#include <QPoint>
+#include <QMouseEvent>
+#include <QString>
+#include <QDragEnterEvent>
+#include <QMimeData>
+#include <QDropEvent>
+#include <QUrl>
+#include <QGraphicsScene>
+#include <QResizeEvent>
+#include <opencv2/opencv.hpp>
+#include "common.h"
+#include "MyQGraphicsItem.h"
+#include <QGraphicsPixmapItem>
+
+class MyQGraphicsView : public QGraphicsView
+{
+	Q_OBJECT 
+public:
+	explicit MyQGraphicsView(QWidget* parent = nullptr);
+
+	void onSliderChangeed(int value);
+	void setImage(const cv::Mat& frame);
+	void setRegionMode(int mode);
+
+	void mouseMoveEvent(QMouseEvent* event);
+	void mousePressEvent(QMouseEvent* event);
+	void dragEnterEvent(QDragEnterEvent* event); //拖动进入事件
+	void dropEvent(QDropEvent* event);
+	void resizeEvent(QResizeEvent* event);        // 缩放事件
+
+signals:
+	void mouseMoveSignal(QPoint pt);
+	void dropFile(QString str);
+
+protected:
+	QGraphicsScene* scene;
+	QGraphicsPixmapItem* pixItem;
+	QGraphicsItem* item;
+	QString filePath;
+	cv::VideoCapture cap;
+	double frameNum;    // 视频总帧数
+	cv::Mat frame;      // 当前视频帧
+	QString regionMode;
+	TIDContour contour;
+
+private:
+	QVector<QPoint> vecPointCache;
+	QPoint ptCache;
+};

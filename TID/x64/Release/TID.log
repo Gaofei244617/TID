@@ -1,0 +1,13 @@
+﻿  uic tid.ui
+  moc tid.h
+  moc MyQGraphicsView.h
+  MyQGraphicsView.cpp
+  main.cpp
+  tid.cpp
+  moc_MyQGraphicsView.cpp
+  moc_tid.cpp
+  TID.vcxproj -> C:\Users\gaofei\Desktop\TID\x64\Release\TID.exe
+  C:\Users\gaofei\Desktop\TID\lib\opencv\build\x64\vc15\bin\opencv_ffmpeg3410_64.dll
+  C:\Users\gaofei\Desktop\TID\lib\opencv\build\x64\vc15\bin\opencv_world3410.dll
+  C:\Users\gaofei\Desktop\TID\lib\opencv\build\x64\vc15\bin\opencv_world3410d.dll
+  已复制         3 个文件。
