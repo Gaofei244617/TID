@@ -1,32 +1,42 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
-#include <string>
+#include <QString>
 #include <QPoint>
 #include <QVector>
 #include <QPoint>
 #include <QSize>
+#include <QPolygon>
+#include <QLine>
 
 struct TIDLane
 {
-	std::string type;
-	QVector<QPoint> direction;
-	QVector<QPoint> pts;
-	QVector<QPoint> virtualLoop;
+	QString type;
+	QLine direction;
+	QPolygon lane;
+	QPolygon virtualLoop;
 };
 
 struct TIDRegion
 {
-	QVector<QPoint> pts;
+	QPolygon region;
 };
 
 struct TIDContour
 {
 	std::unordered_map<int, TIDLane> lanes;
 	std::unordered_map<int, TIDRegion> regions;
+	QString toJsonString()const;
 };
 
 QPoint toRelativePoint(const QPoint& pt, const QSize& size);
 QPoint toPixelPoint(const QPoint& pt, const QSize& size);
+QPolygon toPixelPolygon(const QPolygon& polygon, const QSize& size);
+QLine toPixelLine(const QLine& line, const QSize& size);
 
+// 获取方向线所在车道ID
+int getLaneID(const QLine& line, const TIDContour& contour);
+// 获取虚拟线圈所在车道ID
+int getLaneID(const QPolygon& polygon, const TIDContour& contour);
+
+QVector<QPointF> getArrow(const QLineF& line);

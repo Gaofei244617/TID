@@ -34,50 +34,41 @@ QRectF MyQGraphicsItem::boundingRect() const
 
 void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
-    //static int c = 10;
-    //c += 10;
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    //painter->setPen(QPen(Qt::blue, 1));
-    //painter->drawRect(10, 10, 20, 20);
-    //painter->setPen(QPen(Qt::red, 2));
-    //painter->drawLine(0 + c, 0, 30 + c, 20 + c);
 
     if (m_contour.lanes.size() > 0 || m_contour.regions.size() > 0 || vecPointCache.size() > 0)
     {
+        painter->setRenderHints(QPainter::Antialiasing, true); // 抗锯齿
+        painter->setFont(QFont("times", 18));
         auto size = this->scene()->views().at(0)->size();
         // 分析区域
         painter->setPen(QPen(Qt::yellow, 2));
         for (const auto& it : m_contour.regions)
         {
-            const TIDRegion& region = it.second;
-            QPolygon polygon(region.pts.size());
-            for (int i = 0; i < region.pts.size(); i++)
-            {
-                polygon[i] = toPixelPoint(region.pts[i], size);
-            }
-            painter->drawPolygon(polygon);
+            const TIDRegion& tidRegion = it.second;
+            painter->drawPolygon(toPixelPolygon(tidRegion.region, size));
+            painter->drawText(toPixelPoint(tidRegion.region.at(0), size), QString("#%1").arg(it.first));
         }
 
         // 车道
         painter->setPen(QPen(Qt::blue, 2));
         for (const auto& it : m_contour.lanes)
         {
-            const TIDLane& lane = it.second;
+            const TIDLane& tidLane = it.second;
             // 车道区域
-            QPolygon polygon(lane.pts.size());
-            for (int i = 0; i < lane.pts.size(); i++)
-            {
-                polygon[i] = toPixelPoint(lane.pts[i], size);
-            }
-            painter->drawPolygon(polygon);
+            painter->drawPolygon(toPixelPolygon(tidLane.lane, size));
+            painter->drawText(toPixelPoint(tidLane.lane.at(0), size), QString("#%1").arg(it.first));
             
             // 车道方向线
-            if (lane.direction.size() == 2)
+            if (!tidLane.direction.isNull())
             {
-                QPoint start = toPixelPoint(lane.direction[0], size);
-                QPoint end = toPixelPoint(lane.direction[1], size);
-                painter->drawLine(start, end);
+                auto line = QLine(toPixelLine(tidLane.direction, size));
+                painter->drawLine(line);
+                // 绘制箭头
+                auto pts = getArrow(line);
+                painter->drawLine(pts[0], line.p2());
+                painter->drawLine(pts[1], line.p2());
             }
         }
 
@@ -86,18 +77,13 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         for (const auto& it : m_contour.lanes)
         {
             const auto& loop = it.second.virtualLoop;
-            QPolygon polygon(loop.size());
-            for (int i = 0; i < loop.size(); i++)
-            {
-                polygon[i] = toPixelPoint(loop[i], size);
-            }
-            painter->drawPolygon(polygon);
+            painter->drawPolygon(toPixelPolygon(loop, size));
         }
 
         // 绘制中的图形
         if (vecPointCache.size() > 0)
         {
-            if (mode == "lane")
+            if (mode == "lane" || mode == "direction")
             {
                 painter->setPen(QPen(Qt::blue, 2));
             }
@@ -105,14 +91,13 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             {
                 painter->setPen(QPen(Qt::yellow, 2));
             }
+            else if (mode == "loop")
+            {
+                painter->setPen(QPen(Qt::red, 1.5, Qt::DashDotLine));
+            }
             if (vecPointCache.size() > 1)
             {
-                QPolygon polygon(vecPointCache.size());
-                for (int i = 0; i < vecPointCache.size(); i++)
-                {
-                    polygon[i] = toPixelPoint(vecPointCache[i], size);
-                }
-                painter->drawPolyline(polygon);
+                painter->drawPolyline(toPixelPolygon(QPolygon(vecPointCache), size));
             }
             if (ptCache.x() != 0 || ptCache.y() != 0)
             {

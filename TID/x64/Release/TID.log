@@ -1,10 +1,18 @@
-﻿  uic tid.ui
+﻿  Reading Qt configuration (C:\Qt\5.15.0\msvc2019_64\bin\qmake.exe)
+  uic param_view.ui
+  uic tid.ui
   moc tid.h
   moc MyQGraphicsView.h
+  common.cpp
+  MyQGraphicsItem.cpp
+  MyQGraphicsScene.cpp
   MyQGraphicsView.cpp
-  main.cpp
+  param_view.cpp
   tid.cpp
+  main.cpp
+  moc_MyQGraphicsScene.cpp
   moc_MyQGraphicsView.cpp
+  moc_param_view.cpp
   moc_tid.cpp
   TID.vcxproj -> C:\Users\gaofei\Desktop\TID\x64\Release\TID.exe
   C:\Users\gaofei\Desktop\TID\lib\opencv\build\x64\vc15\bin\opencv_ffmpeg3410_64.dll

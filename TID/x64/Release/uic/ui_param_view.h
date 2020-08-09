@@ -27,7 +27,7 @@ public:
     {
         if (ParamView->objectName().isEmpty())
             ParamView->setObjectName(QString::fromUtf8("ParamView"));
-        ParamView->resize(400, 300);
+        ParamView->resize(494, 603);
         gridLayout = new QGridLayout(ParamView);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
         gridLayout->setContentsMargins(5, 5, 5, 5);

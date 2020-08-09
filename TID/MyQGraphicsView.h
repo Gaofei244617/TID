@@ -34,6 +34,7 @@ public:
 signals:
 	void mouseMoveSignal(QPoint pt);
 	void dropFile(QString str);
+	void updateJson(QString str);
 
 protected:
 	QGraphicsScene* scene;
@@ -43,8 +44,8 @@ protected:
 	cv::VideoCapture cap;
 	double frameNum;    // 视频总帧数
 	cv::Mat frame;      // 当前视频帧
-	QString regionMode;
-	TIDContour contour;
+	QString drawMode;
+	TIDContour m_contour;
 
 private:
 	QVector<QPoint> vecPointCache;

@@ -8,7 +8,7 @@ MyQGraphicsView::MyQGraphicsView(QWidget* parent)
     scene(new MyQGraphicsScene(this)),
     pixItem(nullptr),
     item(nullptr),
-    regionMode("lane")
+    drawMode("lane")
 {
     this->setStyleSheet("padding: 0px; border: 0px;");
     this->setScene(scene);
@@ -71,7 +71,7 @@ void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
 
     if (item != nullptr)
     {
-        static_cast<MyQGraphicsItem*>(item)->updateParam(regionMode, contour, vecPointCache, ptCache);
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
         item->update();
     }
 }
@@ -89,8 +89,19 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton)
     {
         vecPointCache.append(toRelativePoint(point, this->size()));
-        static_cast<MyQGraphicsItem*>(item)->updateParam(regionMode, contour, vecPointCache, ptCache);
+        if (drawMode == "direction" && vecPointCache.size() == 2)
+        {
+            QLine directLine = QLine(vecPointCache[0], vecPointCache[1]);
+            int id = getLaneID(directLine, m_contour);
+            if (id != -1)
+            {
+                m_contour.lanes[id].direction = std::move(directLine);
+            }
+            vecPointCache.clear();
+        }
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
         item->update();
+        emit updateJson(m_contour.toJsonString());
     }
     // ср╪Э
     else if (event->button() == Qt::RightButton)
@@ -99,34 +110,44 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
         {
             vecPointCache.clear();
             ptCache = QPoint(0, 0);
-            static_cast<MyQGraphicsItem*>(item)->updateParam(regionMode, contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
             item->update();
         }
         else
         {
-            if (regionMode == "lane")
+            if (drawMode == "lane")
             {
                 using T = std::pair<int, TIDLane>;
-                const auto lane = std::max_element(contour.lanes.begin(), contour.lanes.end(), 
+                const auto lane = std::max_element(m_contour.lanes.begin(), m_contour.lanes.end(), 
                     [](const T& a, const T& b) {return a.first < b.first; });
-                int laneID = (lane == contour.lanes.end()) ? 0 : lane->first + 1;
-                contour.lanes[laneID] = TIDLane();
-                contour.lanes[laneID].pts = std::move(vecPointCache);
+                int laneID = (lane == m_contour.lanes.end()) ? 0 : lane->first + 1;
+                m_contour.lanes[laneID] = TIDLane();
+                m_contour.lanes[laneID].lane = std::move(vecPointCache);
             }
-            else if (regionMode == "region")
+            else if (drawMode == "region")
             {
                 using T = std::pair<int, TIDRegion>;
-                const auto region = std::max_element(contour.regions.begin(), contour.regions.end(),
+                const auto region = std::max_element(m_contour.regions.begin(), m_contour.regions.end(),
                     [](const T& a, const T& b) {return a.first < b.first; });
-                int regionID = (region == contour.regions.end()) ? 0 : region->first + 1;
+                int regionID = (region == m_contour.regions.end()) ? 0 : region->first + 1;
 
-                contour.regions[regionID] = TIDRegion();
-                contour.regions[regionID].pts = std::move(vecPointCache);
+                m_contour.regions[regionID] = TIDRegion();
+                m_contour.regions[regionID].region = std::move(vecPointCache);
+            }
+            else if (drawMode == "loop")
+            {
+                QPolygon loop(vecPointCache);
+                int id = getLaneID(loop, m_contour);
+                if (id != -1)
+                {
+                    m_contour.lanes[id].virtualLoop = std::move(loop);
+                }
             }
             vecPointCache.clear();
             ptCache = QPoint(0, 0);
-            static_cast<MyQGraphicsItem*>(item)->updateParam(regionMode, contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
             item->update();
+            emit updateJson(m_contour.toJsonString());
         }
     }
 }
@@ -139,7 +160,7 @@ void MyQGraphicsView::resizeEvent(QResizeEvent* event)
         setImage(frame);
         if (item != nullptr)
         {
-            static_cast<MyQGraphicsItem*>(item)->updateParam(regionMode, contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
             item->update();
         }
     }
@@ -180,12 +201,18 @@ void MyQGraphicsView::setRegionMode(const int mode)
     switch (mode)
     {
     case 0:
-        regionMode = "lane";
+        drawMode = "lane";
         break;
     case 1:
-        regionMode = "region";
+        drawMode = "region";
+        break;
+    case 2:
+        drawMode = "direction";
+        break;
+    case 3:
+        drawMode = "loop";
         break;
     default:
-        regionMode = "";
+        drawMode = "";
     }
 }

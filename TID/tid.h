@@ -23,6 +23,6 @@ private:
     QButtonGroup* buttonGroup;
 
 protected:
-    void click_on_viewBtn();    
+    void clickOnViewBtn();    
     void showPoint(const QPoint& pt);
 };
