@@ -25,4 +25,5 @@ private:
 protected:
     void clickOnViewBtn();    
     void showPoint(const QPoint& pt);
+    void clickOnOpenFile();
 };

@@ -1,6 +1,7 @@
 #include "tid.h"
 #include <QMessageBox>
 #include "MyQGraphicsView.h"
+#include <QFileDialog>
 
 TID::TID(QWidget *parent)
     : QMainWindow(parent),
@@ -28,10 +29,12 @@ TID::TID(QWidget *parent)
     // Á¬½ÓÐÅºÅ/²Û
     QObject::connect(ui->viewBtn, &QPushButton::clicked, this, &TID::clickOnViewBtn);
     QObject::connect(ui->graphicsView, &MyQGraphicsView::mouseMoveSignal, this, &TID::showPoint);
-    QObject::connect(ui->graphicsView, &MyQGraphicsView::dropFile, this, &TID::setWindowTitle);
+    QObject::connect(ui->graphicsView, &MyQGraphicsView::openFileSignal, this, &TID::setWindowTitle);
     QObject::connect(ui->slider, &QSlider::valueChanged, ui->graphicsView, &MyQGraphicsView::onSliderChangeed);
     QObject::connect(buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked), ui->graphicsView, &MyQGraphicsView::setRegionMode);
-    QObject::connect(ui->graphicsView, &MyQGraphicsView::updateJson, paramView, &ParamView::setContent);
+    QObject::connect(ui->graphicsView, &MyQGraphicsView::updateJsonSignal, paramView, &ParamView::setContent);
+    QObject::connect(ui->clearBtn, &QPushButton::clicked, ui->graphicsView, &MyQGraphicsView::clearContour);
+    QObject::connect(ui->openBtn, &QPushButton::clicked, this, &TID::clickOnOpenFile);
 }
 
 // ViewJson
@@ -46,3 +49,8 @@ void TID::showPoint(const QPoint& pt)
     ui->label->setText(QString("[%1, %2]").arg(pt.x()).arg(pt.y()));
 }
 
+void TID::clickOnOpenFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", "", 0);
+    ui->graphicsView->actionOnOpenFile(fileName);
+}

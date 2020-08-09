@@ -101,7 +101,7 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
         }
         static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
         item->update();
-        emit updateJson(m_contour.toJsonString());
+        emit updateJsonSignal(m_contour.toJsonString());
     }
     // 右键
     else if (event->button() == Qt::RightButton)
@@ -147,7 +147,7 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
             ptCache = QPoint(0, 0);
             static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
             item->update();
-            emit updateJson(m_contour.toJsonString());
+            emit updateJsonSignal(m_contour.toJsonString());
         }
     }
 }
@@ -171,18 +171,15 @@ void MyQGraphicsView::dragEnterEvent(QDragEnterEvent* event)
     event->acceptProposedAction();
 }
 
-// 拖拽放下事件
-void MyQGraphicsView::dropEvent(QDropEvent* event) 
+void MyQGraphicsView::actionOnOpenFile(QString filePath)
 {
-    const QMimeData* qm = event->mimeData();          // 获取MIMEData
-    filePath = qm->urls()[0].toLocalFile();           // 是获取拖动文件的本地路径
-    emit dropFile(filePath);
+    emit openFileSignal(filePath);
 
     if (cap.isOpened())
     {
         cap.release();
     }
-    
+
     cap.open(filePath.toStdString());
     if (!cap.isOpened())
     {
@@ -191,8 +188,15 @@ void MyQGraphicsView::dropEvent(QDropEvent* event)
     }
     frameNum = cap.get(CV_CAP_PROP_FRAME_COUNT);
     cap >> frame;
-
     setImage(frame);
+}
+
+// 拖拽放下事件
+void MyQGraphicsView::dropEvent(QDropEvent* event) 
+{
+    const QMimeData* qm = event->mimeData();          // 获取MIMEData
+    filePath = qm->urls()[0].toLocalFile();           // 是获取拖动文件的本地路径
+    actionOnOpenFile(filePath);
 }
 
 // 设置绘图模式
@@ -214,5 +218,19 @@ void MyQGraphicsView::setRegionMode(const int mode)
         break;
     default:
         drawMode = "";
+    }
+}
+
+// 清空绘图数据
+void MyQGraphicsView::clearContour()
+{
+    m_contour.lanes.clear();
+    m_contour.regions.clear();
+    vecPointCache.clear();
+    ptCache = QPoint(0, 0);
+    if (item != nullptr)
+    {
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+        item->update();
     }
 }

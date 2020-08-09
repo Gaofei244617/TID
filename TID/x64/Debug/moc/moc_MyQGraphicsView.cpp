@@ -79,8 +79,8 @@ void MyQGraphicsView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->mouseMoveSignal((*reinterpret_cast< QPoint(*)>(_a[1]))); break;
-        case 1: _t->dropFile((*reinterpret_cast< QString(*)>(_a[1]))); break;
-        case 2: _t->updateJson((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 1: _t->openFileSignal((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 2: _t->updateJsonSignal((*reinterpret_cast< QString(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -94,14 +94,14 @@ void MyQGraphicsView::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         }
         {
             using _t = void (MyQGraphicsView::*)(QString );
-            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&MyQGraphicsView::dropFile)) {
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&MyQGraphicsView::openFileSignal)) {
                 *result = 1;
                 return;
             }
         }
         {
             using _t = void (MyQGraphicsView::*)(QString );
-            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&MyQGraphicsView::updateJson)) {
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&MyQGraphicsView::updateJsonSignal)) {
                 *result = 2;
                 return;
             }
@@ -157,14 +157,14 @@ void MyQGraphicsView::mouseMoveSignal(QPoint _t1)
 }
 
 // SIGNAL 1
-void MyQGraphicsView::dropFile(QString _t1)
+void MyQGraphicsView::openFileSignal(QString _t1)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))) };
     QMetaObject::activate(this, &staticMetaObject, 1, _a);
 }
 
 // SIGNAL 2
-void MyQGraphicsView::updateJson(QString _t1)
+void MyQGraphicsView::updateJsonSignal(QString _t1)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))) };
     QMetaObject::activate(this, &staticMetaObject, 2, _a);

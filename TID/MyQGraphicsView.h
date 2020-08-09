@@ -24,6 +24,8 @@ public:
 	void onSliderChangeed(int value);
 	void setImage(const cv::Mat& frame);
 	void setRegionMode(int mode);
+	void clearContour();
+	void actionOnOpenFile(QString filePath);
 
 	void mouseMoveEvent(QMouseEvent* event);
 	void mousePressEvent(QMouseEvent* event);
@@ -33,8 +35,8 @@ public:
 
 signals:
 	void mouseMoveSignal(QPoint pt);
-	void dropFile(QString str);
-	void updateJson(QString str);
+	void openFileSignal(QString str);
+	void updateJsonSignal(QString str);
 
 protected:
 	QGraphicsScene* scene;
