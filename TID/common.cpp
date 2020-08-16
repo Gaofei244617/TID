@@ -7,6 +7,7 @@ QString JsonToString(const rapidjson::Document& doc)
 {
     rapidjson::StringBuffer jsonBuffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(jsonBuffer);
+    writer.SetFormatOptions(rapidjson::kFormatSingleLineArray);
     doc.Accept(writer);
     return jsonBuffer.GetString();
 }
