@@ -1,69 +1,77 @@
 #include "common.h"
 #include <algorithm>
-#include <QJsonDocument>
-#include <QJsonValue>
-#include <QJsonObject>
-#include <QJsonArray>
+#include "rapidjson/prettywriter.h"  
+#include "rapidjson/stringbuffer.h"
+
+QString JsonToString(const rapidjson::Document& doc)
+{
+    rapidjson::StringBuffer jsonBuffer;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(jsonBuffer);
+    doc.Accept(writer);
+    return jsonBuffer.GetString();
+}
 
 QString TIDContour::toJsonString()const
 {
-    QJsonObject obj;
-    QJsonArray laneArry;
+    using namespace rapidjson;
+    Document obj;
+    obj.SetObject();
+    auto& allo = obj.GetAllocator();
+
+    Value laneArry(kArrayType);
     for (const auto& tidLane : lanes)
     {
-        QJsonObject laneObj;
+        Value laneObj(kObjectType);
+        laneObj.AddMember("Id", tidLane.first, allo);
+        laneObj.AddMember("Type", "BusLane", allo);
 
-        laneObj.insert("ID", tidLane.first);
-        laneObj.insert("Type", "BusLane");
-
-        QJsonArray lane;
+        Value lane(kArrayType);
         for (const auto& pt : tidLane.second.lane)
         {
-            lane.append(pt.x());
-            lane.append(pt.y());
+            lane.PushBack(pt.x(), allo);
+            lane.PushBack(pt.y(), allo);
         }
-        laneObj.insert("Coordinate", lane);
+        laneObj.AddMember("Coordinates", lane, allo);
 
-        QJsonObject direct;
         const auto& line = tidLane.second.direction;
-        QJsonArray start = { line.x1(), line.y1()};
-        QJsonArray end = { line.x2(), line.y2() };
-        direct.insert("Start", start);
-        direct.insert("End", end);
-        laneObj.insert("Direction", direct);
-        
-        QJsonArray loop;
+        Value start(kArrayType);
+        start.PushBack(line.x1(), allo);
+        start.PushBack(line.y1(), allo);
+        Value end(kArrayType);
+        end.PushBack(line.x2(), allo);
+        end.PushBack(line.y2(), allo);
+        Value direct(kObjectType);
+        direct.AddMember("Start", start, allo);
+        direct.AddMember("End", end, allo);
+        laneObj.AddMember("Direction", direct, allo);
+
+        Value loop(kArrayType);
         for (const auto& pt : tidLane.second.virtualLoop)
         {
-            loop.append(pt.x());
-            loop.append(pt.y());
+            loop.PushBack(pt.x(), allo);
+            loop.PushBack(pt.y(), allo);
         }
-        laneObj.insert("VirtualLoop", loop);
-        laneArry.append(laneObj);
+        laneObj.AddMember("VirtualLoop", loop, allo);
+        laneArry.PushBack(laneObj, allo);
     }
-    obj.insert("Lane", laneArry);
+    obj.AddMember("Lane", laneArry, allo);
 
-    QJsonArray regionArry;
+    Value regionArry(kArrayType);
     for (const auto& tidRegion : regions)
     {
-        QJsonObject regionObj;
-        regionObj.insert("ID", tidRegion.first);
-        QJsonArray region;
+        Value regionObj(kObjectType);
+        regionObj.AddMember("Id", tidRegion.first, allo);
+        Value region(kArrayType);
         for (const auto& pt : tidRegion.second.region)
         {
-            region.append(pt.x());
-            region.append(pt.y());
+            region.PushBack(pt.x(), allo);
+            region.PushBack(pt.y(), allo);
         }
-        regionObj.insert("Coordinate", region);
-        regionObj.insert("ID", tidRegion.first);
-        regionObj.insert("ID", tidRegion.first);
-
-        regionArry.append(regionObj);
+        regionObj.AddMember("Coordinates", region, allo);
+        regionArry.PushBack(regionObj, allo);
     }
-    obj.insert("AnalysisRegion", regionArry);
-
-    QJsonDocument doc(obj);
-    return doc.toJson(QJsonDocument::Indented);
+    obj.AddMember("AnalysisRegion", regionArry, allo);
+    return JsonToString(obj);
 }
 
 QPoint toRelativePoint(const QPoint& pt, const QSize& size)
@@ -155,4 +163,3 @@ QVector<QPointF> getArrow(const QLineF& line)
 
     return QVector<QPointF>{pt1, pt2};
 }
-

@@ -232,5 +232,6 @@ void MyQGraphicsView::clearContour()
     {
         static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
         item->update();
+        emit updateJsonSignal(m_contour.toJsonString());
     }
 }

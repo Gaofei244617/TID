@@ -8,6 +8,7 @@
 #include <QSize>
 #include <QPolygon>
 #include <QLine>
+#include "rapidjson/document.h"
 
 struct TIDLane
 {
@@ -40,3 +41,5 @@ int getLaneID(const QLine& line, const TIDContour& contour);
 int getLaneID(const QPolygon& polygon, const TIDContour& contour);
 
 QVector<QPointF> getArrow(const QLineF& line);
+
+QString JsonToString(const rapidjson::Document& doc);

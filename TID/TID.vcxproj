@@ -43,11 +43,11 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>$(SolutionDir)lib\opencv\build\include\opencv2;$(SolutionDir)lib\opencv\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)lib;$(SolutionDir)lib\opencv\build\include\opencv2;$(SolutionDir)lib\opencv\build\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)lib\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>$(SolutionDir)lib\opencv\build\include;$(SolutionDir)lib\opencv\build\include\opencv2;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)lib;$(SolutionDir)lib\opencv\build\include;$(SolutionDir)lib\opencv\build\include\opencv2;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)lib\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
