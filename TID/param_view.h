@@ -11,6 +11,7 @@ class ParamView : public QWidget
 public:
 	ParamView(QWidget* parent = Q_NULLPTR);
 	void setContent(const QString& str);
+	void clickOnExportBtn();
 
 private:
 	Ui::ParamView* ui;
