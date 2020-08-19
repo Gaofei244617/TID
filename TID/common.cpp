@@ -69,6 +69,30 @@ QString TIDContour::toJsonString()const
             region.PushBack(pt.y(), allo);
         }
         regionObj.AddMember("Coordinates", region, allo);
+
+        /************************************************************/
+        Value incident(kArrayType);
+        incident.PushBack("Amble", allo);
+        incident.PushBack("FireSmoke", allo);
+        incident.PushBack("Retrograde", allo);
+        incident.PushBack("AbandonedObject", allo);
+        incident.PushBack("Accident", allo);
+        incident.PushBack("IllegalParking", allo);
+        incident.PushBack("OccupancyEL", allo);
+        incident.PushBack("NonvehicleEntry", allo);
+        incident.PushBack("Congestion", allo);
+        incident.PushBack("BearOff", allo);
+        incident.PushBack("Fog", allo);
+        incident.PushBack("Snow", allo);
+        regionObj.AddMember("Incident", incident, allo);
+
+        Value incidentParam(kObjectType);
+        incidentParam.AddMember("AbandonedObjectSense", 60, allo);
+        incidentParam.AddMember("CongestionLength", 90, allo);
+        incidentParam.AddMember("CongestionInterval", 30, allo);
+        incidentParam.AddMember("IllegalParkTime", 20, allo);
+        regionObj.AddMember("IncidentParm", incidentParam, allo);
+        /************************************************************/
         regionArry.PushBack(regionObj, allo);
     }
     obj.AddMember("AnalysisRegion", regionArry, allo);
