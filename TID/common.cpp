@@ -1,13 +1,30 @@
 #include "common.h"
 #include <algorithm>
 #include "rapidjson/prettywriter.h"  
+#include "rapidjson/writer.h"  
 #include "rapidjson/stringbuffer.h"
 
 QString JsonToString(const rapidjson::Document& doc)
 {
     rapidjson::StringBuffer jsonBuffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(jsonBuffer);
+    doc.Accept(writer);
+    return jsonBuffer.GetString();
+}
+
+QString JsonToPrettyString(const rapidjson::Document& doc)
+{
+    rapidjson::StringBuffer jsonBuffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(jsonBuffer);
     writer.SetFormatOptions(rapidjson::kFormatSingleLineArray);
+    doc.Accept(writer);
+    return jsonBuffer.GetString();
+}
+
+QString JsonToPrettyString2(const rapidjson::Document& doc)
+{
+    rapidjson::StringBuffer jsonBuffer;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(jsonBuffer);
     doc.Accept(writer);
     return jsonBuffer.GetString();
 }
@@ -96,7 +113,7 @@ QString TIDContour::toJsonString()const
         regionArry.PushBack(regionObj, allo);
     }
     obj.AddMember("AnalysisRegion", regionArry, allo);
-    return JsonToString(obj);
+    return JsonToPrettyString(obj);
 }
 
 QPoint toRelativePoint(const QPoint& pt, const QSize& size)

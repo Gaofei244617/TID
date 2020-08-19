@@ -43,3 +43,5 @@ int getLaneID(const QPolygon& polygon, const TIDContour& contour);
 QVector<QPointF> getArrow(const QLineF& line);
 
 QString JsonToString(const rapidjson::Document& doc);
+QString JsonToPrettyString(const rapidjson::Document& doc);
+QString JsonToPrettyString2(const rapidjson::Document& doc);
