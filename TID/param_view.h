@@ -4,6 +4,7 @@
 #include "ui_param_view.h"
 #include <QString>
 #include <QButtonGroup>
+#include "MyQTextEdit.h"
 
 class ParamView : public QWidget
 {
@@ -15,8 +16,10 @@ public:
 	void formatContent(int format);
 	void clickOnExportBtn();
 
-private:
+public:
 	Ui::ParamView* ui;
+
+private:
 	QButtonGroup* buttonGroup;
 };
 

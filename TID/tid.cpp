@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include "MyQGraphicsView.h"
 #include <QFileDialog>
+#include "MyQTextEdit.h"
 
 TID::TID(QWidget *parent)
     : QMainWindow(parent),
@@ -35,6 +36,8 @@ TID::TID(QWidget *parent)
     QObject::connect(ui->graphicsView, &MyQGraphicsView::updateJsonSignal, paramView, &ParamView::setContent);
     QObject::connect(ui->clearBtn, &QPushButton::clicked, ui->graphicsView, &MyQGraphicsView::clearContour);
     QObject::connect(ui->openBtn, &QPushButton::clicked, this, &TID::clickOnOpenFile);
+    QObject::connect(paramView->ui->textEdit, &MyQTextEdit::inputFileSignal, ui->graphicsView, &MyQGraphicsView::setContour);
+
 }
 
 // ViewJson

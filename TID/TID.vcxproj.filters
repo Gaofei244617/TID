@@ -56,6 +56,9 @@
     <ClCompile Include="common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MyQTextEdit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="param_view.ui">
@@ -70,6 +73,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MyQGraphicsScene.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MyQTextEdit.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

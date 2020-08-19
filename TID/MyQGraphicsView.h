@@ -26,6 +26,7 @@ public:
 	void setRegionMode(int mode);
 	void clearContour();
 	void actionOnOpenFile(QString filePath);
+	void setContour(const QString& str);
 
 	void mouseMoveEvent(QMouseEvent* event);
 	void mousePressEvent(QMouseEvent* event);

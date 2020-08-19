@@ -15,11 +15,14 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTextEdit" name="textEdit">
+    <widget class="MyQTextEdit" name="textEdit">
      <property name="font">
       <font>
        <family>Consolas</family>
       </font>
+     </property>
+     <property name="mouseTracking">
+      <bool>true</bool>
      </property>
      <property name="readOnly">
       <bool>true</bool>
@@ -95,6 +98,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyQTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>MyQTextEdit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

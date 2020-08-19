@@ -191,6 +191,10 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
     setImage(frame);
 }
 
+void MyQGraphicsView::setContour(const QString& str)
+{
+}
+
 // 拖拽放下事件
 void MyQGraphicsView::dropEvent(QDropEvent* event) 
 {

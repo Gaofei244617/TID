@@ -10,6 +10,7 @@ ParamView::ParamView(QWidget* parent)
 	ui(new Ui::ParamView())
 {
 	ui->setupUi(this);
+
     buttonGroup = new QButtonGroup(this);
     buttonGroup->setExclusive(true);
     buttonGroup->addButton(ui->fmtBtn1, 0);
