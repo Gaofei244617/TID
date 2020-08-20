@@ -23,7 +23,8 @@ private:
     QButtonGroup* buttonGroup;
 
 protected:
-    void clickOnViewBtn();    
+    void onOpenVideo(const QString& info);
+    void clickOnViewBtn();
     void showPoint(const QPoint& pt);
     void clickOnOpenFile();
 };

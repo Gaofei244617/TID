@@ -3,6 +3,7 @@
 #include "rapidjson/prettywriter.h"  
 #include "rapidjson/writer.h"  
 #include "rapidjson/stringbuffer.h"
+#include <QMessageBox>
 
 QString JsonToString(const rapidjson::Document& doc)
 {
@@ -32,14 +33,17 @@ QString JsonToPrettyString2(const rapidjson::Document& doc)
 QString TIDContour::toJsonString()const
 {
     using namespace rapidjson;
-    Document obj;
-    obj.SetObject();
-    auto& allo = obj.GetAllocator();
+    Document doc;
+    doc.SetObject();
+    auto& allo = doc.GetAllocator();
 
+    doc.AddMember("channelId", "0", allo);
+
+    Value cfg(kObjectType);
     /****************************************/
-    obj.AddMember("ImageWidth", 1920, allo);
-    obj.AddMember("ImageHeight", 1080, allo);
-    obj.AddMember("SceneMode", "MainRoad", allo);
+    cfg.AddMember("ImageWidth", 1920, allo);
+    cfg.AddMember("ImageHeight", 1080, allo);
+    cfg.AddMember("SceneMode", "MainRoad", allo);
     /****************************************/
 
     Value laneArry(kArrayType);
@@ -78,7 +82,7 @@ QString TIDContour::toJsonString()const
         laneObj.AddMember("VirtualLoop", loop, allo);
         laneArry.PushBack(laneObj, allo);
     }
-    obj.AddMember("Lane", laneArry, allo);
+    cfg.AddMember("Lane", laneArry, allo);
 
     Value regionArry(kArrayType);
     for (const auto& tidRegion : regions)
@@ -103,6 +107,7 @@ QString TIDContour::toJsonString()const
         incident.PushBack("IllegalParking", allo);
         incident.PushBack("OccupancyEL", allo);
         incident.PushBack("NonvehicleEntry", allo);
+        incident.PushBack("PedestrianEntry", allo);
         incident.PushBack("Congestion", allo);
         incident.PushBack("BearOff", allo);
         incident.PushBack("Fog", allo);
@@ -118,13 +123,65 @@ QString TIDContour::toJsonString()const
         /************************************************************/
         regionArry.PushBack(regionObj, allo);
     }
-    obj.AddMember("AnalysisRegion", regionArry, allo);
+    cfg.AddMember("AnalysisRegion", regionArry, allo);
 
     /************************************************************/
-    obj.AddMember("ReportingInterval", 25, allo);
+    cfg.AddMember("ReportingInterval", 25, allo);
     /************************************************************/
+    doc.AddMember("config", cfg, allo);
 
-    return JsonToPrettyString(obj);
+    return JsonToPrettyString(doc);
+}
+
+TIDContour getTIDContour(const QString& json)
+{
+    rapidjson::Document doc;
+    doc.Parse(json.toStdString().c_str());
+    if (doc.HasParseError())
+    {
+        QMessageBox::critical(nullptr, nullptr, "Fail to Parse TID Json!");
+        return TIDContour();
+    }
+
+    TIDContour contour;
+    for (auto it = doc["config"]["Lane"].Begin(); it != doc["config"]["Lane"].End(); it++)
+    {
+        auto lane = it->GetObject();
+
+        int id = lane["Id"].GetInt();
+        QString type = lane["Type"].GetString();
+
+        QPolygon polygon;
+        for (int i = 0; i < lane["Coordinates"].Size(); i += 2)
+        {
+            polygon.append(QPoint(lane["Coordinates"][i].GetInt(), lane["Coordinates"][i + 1].GetInt()));
+        }
+
+        QPoint start(lane["Direction"]["Start"][0].GetInt(), lane["Direction"]["Start"][1].GetInt());
+        QPoint end(lane["Direction"]["End"][0].GetInt(), lane["Direction"]["End"][1].GetInt());
+        QLine direction(start, end);
+
+        QPolygon virtualLoop;
+        for (int i = 0; i < lane["VirtualLoop"].Size(); i += 2)
+        {
+            virtualLoop.append(QPoint(lane["VirtualLoop"][i].GetInt(), lane["VirtualLoop"][i + 1].GetInt()));
+        }
+        contour.lanes[id] = TIDLane{ type, direction, polygon, virtualLoop };
+    }
+
+    for (auto it = doc["config"]["AnalysisRegion"].Begin(); it != doc["config"]["AnalysisRegion"].End(); it++)
+    {
+        auto region = it->GetObject();
+        int id = region["Id"].GetInt();
+        QPolygon polygon;
+        for (int i = 0; i < region["Coordinates"].Size(); i += 2)
+        {
+            polygon.append(QPoint(region["Coordinates"][i].GetInt(), region["Coordinates"][i + 1].GetInt()));
+        }
+        contour.regions[id] = TIDRegion{ polygon };
+    }
+
+    return contour;
 }
 
 QPoint toRelativePoint(const QPoint& pt, const QSize& size)
@@ -201,10 +258,9 @@ int getLaneID(const QPolygon& polygon, const TIDContour& contour)
 }
 
 // 计算直线末端箭头
-QVector<QPointF> getArrow(const QLineF& line)
+QVector<QPointF> getArrow(const QLineF& line, const int arrowSize)
 {
     const double PI = 3.14159265358979323846264338327950288419717;
-    const int arrowSize = 15;
     double angle = acos(line.dx() / line.length());
 
     if (line.dy() >= 0)
@@ -216,52 +272,3 @@ QVector<QPointF> getArrow(const QLineF& line)
 
     return QVector<QPointF>{pt1, pt2};
 }
-
-TIDContour getTIDContour(const QString& json)
-{
-    rapidjson::Document doc;
-    doc.Parse(json.toStdString().c_str());
-
-    TIDContour contour;
-    for (auto it = doc["Lane"].Begin(); it != doc["Lane"].End(); it++)
-    {
-        auto lane = it->GetObject();
-
-        int id = lane["Id"].GetInt();
-        QString type = lane["Type"].GetString();
-
-        QPolygon polygon;
-        for (int i = 0; i < lane["Coordinates"].Size(); i += 2)
-        {
-            polygon.append(QPoint(lane["Coordinates"][i].GetInt(), lane["Coordinates"][i + 1].GetInt()));
-        }
-
-        QPoint start(lane["Direction"]["Start"][0].GetInt(), lane["Direction"]["Start"][1].GetInt());
-        QPoint end(lane["Direction"]["End"][0].GetInt(), lane["Direction"]["End"][1].GetInt());
-        QLine direction(start, end);
-
-        QPolygon virtualLoop;
-        for (int i = 0; i < lane["VirtualLoop"].Size(); i += 2)
-        {
-            virtualLoop.append(QPoint(lane["VirtualLoop"][i].GetInt(), lane["VirtualLoop"][i + 1].GetInt()));
-        }
-        contour.lanes[id] = TIDLane{ type, direction, polygon, virtualLoop };
-    }
-
-    for (auto it = doc["AnalysisRegion"].Begin(); it != doc["AnalysisRegion"].End(); it++)
-    {
-        auto region = it->GetObject();
-
-        int id = region["Id"].GetInt();
-
-        QPolygon polygon;
-        for (int i = 0; i < region["Coordinates"].Size(); i += 2)
-        {
-            polygon.append(QPoint(region["Coordinates"][i].GetInt(), region["Coordinates"][i + 1].GetInt()));
-        }
-        contour.regions[id] = TIDRegion{ polygon };
-    }
-
-    return contour;
-}
-

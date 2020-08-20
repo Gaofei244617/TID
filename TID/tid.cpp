@@ -3,6 +3,9 @@
 #include "MyQGraphicsView.h"
 #include <QFileDialog>
 #include "MyQTextEdit.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 
 TID::TID(QWidget *parent)
     : QMainWindow(parent),
@@ -30,14 +33,26 @@ TID::TID(QWidget *parent)
     // 连接信号/槽
     QObject::connect(ui->viewBtn, &QPushButton::clicked, this, &TID::clickOnViewBtn);
     QObject::connect(ui->graphicsView, &MyQGraphicsView::mouseMoveSignal, this, &TID::showPoint);
-    QObject::connect(ui->graphicsView, &MyQGraphicsView::openFileSignal, this, &TID::setWindowTitle);
+    QObject::connect(ui->graphicsView, &MyQGraphicsView::openFileSignal, this, &TID::onOpenVideo);
     QObject::connect(ui->slider, &QSlider::valueChanged, ui->graphicsView, &MyQGraphicsView::onSliderChangeed);
     QObject::connect(buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked), ui->graphicsView, &MyQGraphicsView::setRegionMode);
     QObject::connect(ui->graphicsView, &MyQGraphicsView::updateJsonSignal, paramView, &ParamView::setContent);
     QObject::connect(ui->clearBtn, &QPushButton::clicked, ui->graphicsView, &MyQGraphicsView::clearContour);
     QObject::connect(ui->openBtn, &QPushButton::clicked, this, &TID::clickOnOpenFile);
     QObject::connect(paramView->ui->textEdit, &MyQTextEdit::inputFileSignal, ui->graphicsView, &MyQGraphicsView::setContour);
+}
 
+void TID::onOpenVideo(const QString& info)
+{
+    QJsonDocument doc = QJsonDocument::fromJson(info.toUtf8());
+    QJsonObject obj = doc.object();
+    QString name = obj.take("Name").toString();
+    QString frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]")
+        .arg(obj.take("FPS").toDouble())
+        .arg(obj.take("FrameCount").toDouble());
+
+    this -> setWindowTitle(name);
+    ui->label2->setText(frameInfo);
 }
 
 // ViewJson

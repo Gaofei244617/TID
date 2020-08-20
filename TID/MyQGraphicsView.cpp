@@ -2,6 +2,8 @@
 #include "MyQGraphicsScene.h"
 #include <QMessageBox>
 #include "common.h"
+#include <QJsonDocument>
+#include <QJsonObject>
 
 MyQGraphicsView::MyQGraphicsView(QWidget* parent)
     :QGraphicsView(parent),
@@ -38,7 +40,7 @@ void MyQGraphicsView::setImage(const cv::Mat& imgFrame)
 
     scene->setSceneRect(0, 0, w, h);
 
-    // 北京图片
+    // 背景图片
     if (pixItem != nullptr)
     {
         pixItem->setPixmap(QPixmap::fromImage(qImg));
@@ -173,8 +175,6 @@ void MyQGraphicsView::dragEnterEvent(QDragEnterEvent* event)
 
 void MyQGraphicsView::actionOnOpenFile(QString filePath)
 {
-    emit openFileSignal(filePath);
-
     if (cap.isOpened())
     {
         cap.release();
@@ -187,12 +187,31 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
         return;
     }
     frameNum = cap.get(CV_CAP_PROP_FRAME_COUNT);
+    auto fps = cap.get(CV_CAP_PROP_FPS);
     cap >> frame;
     setImage(frame);
+
+    QJsonObject info;
+    info.insert("Name", filePath);
+    info.insert("FrameCount", frameNum);
+    info.insert("FPS", fps);
+    emit openFileSignal(QJsonDocument(info).toJson(QJsonDocument::Compact));
 }
 
 void MyQGraphicsView::setContour(const QString& str)
 {
+    m_contour = getTIDContour(str);
+    vecPointCache.clear();
+    ptCache = QPoint(0, 0);
+    if (item != nullptr)
+    {
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+        item->update();
+    }
+    else
+    {
+        QMessageBox::about(nullptr, nullptr, "Please open video first.");
+    }
 }
 
 // 拖拽放下事件

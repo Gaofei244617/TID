@@ -40,7 +40,8 @@ int getLaneID(const QLine& line, const TIDContour& contour);
 // 获取虚拟线圈所在车道ID
 int getLaneID(const QPolygon& polygon, const TIDContour& contour);
 
-QVector<QPointF> getArrow(const QLineF& line);
+// 获取箭头
+QVector<QPointF> getArrow(const QLineF& line, const int size);
 
 TIDContour getTIDContour(const QString& json);
 

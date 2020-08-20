@@ -32,6 +32,7 @@ QRectF MyQGraphicsItem::boundingRect() const
     return QRectF(0, 0, 1920, 1080);
 }
 
+// »æÍ¼
 void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     Q_UNUSED(option);
@@ -66,9 +67,12 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
                 auto line = QLine(toPixelLine(tidLane.direction, size));
                 painter->drawLine(line);
                 // »æÖÆ¼ýÍ·
-                auto pts = getArrow(line);
-                painter->drawLine(pts[0], line.p2());
-                painter->drawLine(pts[1], line.p2());
+                auto pts = getArrow(line, 18);
+                QPolygon polygon;
+                polygon << line.p2() << pts[0].toPoint() << pts[1].toPoint();
+                QPainterPath path;
+                path.addPolygon(polygon);
+                painter->fillPath(path, QBrush(Qt::blue));
             }
         }
 
