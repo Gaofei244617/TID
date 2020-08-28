@@ -51,7 +51,10 @@ QString TIDContour::toJsonString()const
     {
         Value laneObj(kObjectType);
         laneObj.AddMember("Id", tidLane.first, allo);
-        laneObj.AddMember("Type", "BusLane", allo);
+
+        Value laneType(kObjectType);
+        laneType.SetString(tidLane.second.type.toStdString().c_str(), allo);
+        laneObj.AddMember("Type", laneType, allo);
 
         Value lane(kArrayType);
         for (const auto& pt : tidLane.second.lane)

@@ -25,9 +25,10 @@ TID::TID(QWidget *parent)
     buttonGroup = new QButtonGroup(this);
     buttonGroup->setExclusive(true);
     buttonGroup->addButton(ui->radioButtonLane, 0);
-    buttonGroup->addButton(ui->radioButtonRegion, 1);
-    buttonGroup->addButton(ui->radioButtonDirect, 2);
-    buttonGroup->addButton(ui->radioButtonLoop, 3);
+    buttonGroup->addButton(ui->radioButtonEmLane, 1);
+    buttonGroup->addButton(ui->radioButtonRegion, 2);
+    buttonGroup->addButton(ui->radioButtonDirect, 3);
+    buttonGroup->addButton(ui->radioButtonLoop, 4);
     ui->radioButtonLane->setChecked(true);
     
     // 连接信号/槽
@@ -47,9 +48,10 @@ void TID::onOpenVideo(const QString& info)
     QJsonDocument doc = QJsonDocument::fromJson(info.toUtf8());
     QJsonObject obj = doc.object();
     QString name = obj.take("Name").toString();
-    QString frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]")
+    QString frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]   时长: [%3 min]")
         .arg(obj.take("FPS").toDouble())
-        .arg(obj.take("FrameCount").toDouble());
+        .arg(obj.take("FrameCount").toDouble())
+        .arg(obj.take("Time").toDouble());
 
     this -> setWindowTitle(name);
     ui->label2->setText(frameInfo);

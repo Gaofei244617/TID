@@ -10,7 +10,7 @@ MyQGraphicsView::MyQGraphicsView(QWidget* parent)
     scene(new MyQGraphicsScene(this)),
     pixItem(nullptr),
     item(nullptr),
-    drawMode("lane")
+    drawMode("BusLane")
 {
     this->setStyleSheet("padding: 0px; border: 0px;");
     this->setScene(scene);
@@ -20,7 +20,8 @@ void MyQGraphicsView::onSliderChangeed(int value)
 {
     if (cap.isOpened())
     {
-        double pos = value / 1000.0 * frameNum;
+        double val = value >= 1000 ? 999 : value;
+        double pos = val / 1000.0 * frameNum;
         cap.set(CV_CAP_PROP_POS_FRAMES, pos);
         cap >> frame;
         setImage(frame);
@@ -117,13 +118,14 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
         }
         else
         {
-            if (drawMode == "lane")
+            if (drawMode == "BusLane" || drawMode == "EmergencyLane")
             {
                 using T = std::pair<int, TIDLane>;
                 const auto lane = std::max_element(m_contour.lanes.begin(), m_contour.lanes.end(), 
                     [](const T& a, const T& b) {return a.first < b.first; });
                 int laneID = (lane == m_contour.lanes.end()) ? 0 : lane->first + 1;
                 m_contour.lanes[laneID] = TIDLane();
+                m_contour.lanes[laneID].type = drawMode;
                 m_contour.lanes[laneID].lane = std::move(vecPointCache);
             }
             else if (drawMode == "region")
@@ -195,6 +197,7 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
     info.insert("Name", filePath);
     info.insert("FrameCount", frameNum);
     info.insert("FPS", fps);
+    info.insert("Time", round(frameNum / fps * 100.0 / 60.0) / 100.0);  //  ”∆µ ±≥§(min)
     emit openFileSignal(QJsonDocument(info).toJson(QJsonDocument::Compact));
 }
 
@@ -228,15 +231,18 @@ void MyQGraphicsView::setRegionMode(const int mode)
     switch (mode)
     {
     case 0:
-        drawMode = "lane";
+        drawMode = "BusLane";
         break;
     case 1:
-        drawMode = "region";
+        drawMode = "EmergencyLane";
         break;
     case 2:
-        drawMode = "direction";
+        drawMode = "region";
         break;
     case 3:
+        drawMode = "direction";
+        break;
+    case 4:
         drawMode = "loop";
         break;
     default:

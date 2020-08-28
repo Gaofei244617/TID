@@ -117,7 +117,20 @@
          </font>
         </property>
         <property name="text">
-         <string>车道</string>
+         <string>普通车道</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButtonEmLane">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>应急车道</string>
         </property>
        </widget>
       </item>
