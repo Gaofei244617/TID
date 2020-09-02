@@ -109,7 +109,7 @@ QString TIDContour::toJsonString()const
         incident.PushBack("Accident", allo);
         incident.PushBack("IllegalParking", allo);
         incident.PushBack("OccupancyEL", allo);
-        incident.PushBack("NonvehicleEntry", allo);
+        incident.PushBack("NonVehicleEntry", allo);
         incident.PushBack("PedestrianEntry", allo);
         incident.PushBack("Congestion", allo);
         incident.PushBack("BearOff", allo);
