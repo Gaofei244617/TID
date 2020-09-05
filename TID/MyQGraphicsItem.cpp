@@ -44,13 +44,16 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         painter->setRenderHints(QPainter::Antialiasing, true); // 抗锯齿
         painter->setFont(QFont("times", 18));
         auto size = this->scene()->views().at(0)->size();
+       
         // 分析区域
-        painter->setPen(QPen(Qt::yellow, 2));
         for (const auto& it : m_contour.regions)
         {
+            painter->setPen(QPen(Qt::yellow, 2));
             const TIDRegion& tidRegion = it.second;
             painter->drawPolygon(toPixelPolygon(tidRegion.region, size));
             painter->drawText(toPixelPoint(tidRegion.region.at(0), size), QString("#%1").arg(it.first));
+            painter->setPen(QPen(Qt::green, 5));
+            painter->drawPoints(toPixelPolygon(tidRegion.region, size));
         }
 
         // 车道
@@ -69,6 +72,8 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             // 车道区域
             painter->drawPolygon(toPixelPolygon(tidLane.lane, size));
             painter->drawText(toPixelPoint(tidLane.lane.at(0), size), QString("#%1").arg(it.first));
+            painter->setPen(QPen(Qt::green, 5));
+            painter->drawPoints(toPixelPolygon(tidLane.lane, size));
             
             // 车道方向线
             if (!tidLane.direction.isNull())

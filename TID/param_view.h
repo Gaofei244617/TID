@@ -15,6 +15,8 @@ public:
 	void setContent(const QString& str);
 	void formatContent(int format);
 	void clickOnExportBtn();
+	void clickOnEditBtn();
+	void clickOnApplyBtn();
 
 public:
 	Ui::ParamView* ui;

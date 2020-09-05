@@ -19,6 +19,8 @@ ParamView::ParamView(QWidget* parent)
     ui->fmtBtn1->setChecked(true);
 
     QObject::connect(ui->exportButton, &QPushButton::clicked, this, &ParamView::clickOnExportBtn);
+    QObject::connect(ui->editButton, &QPushButton::clicked, this, &ParamView::clickOnEditBtn);
+    QObject::connect(ui->applyButton, &QPushButton::clicked, this, &ParamView::clickOnApplyBtn);
     QObject::connect(buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &ParamView::formatContent);
 }
 
@@ -74,3 +76,14 @@ void ParamView::clickOnExportBtn()
     return;
 }
 
+void ParamView::clickOnEditBtn()
+{
+    ui->textEdit->setReadOnly(false);
+}
+
+void ParamView::clickOnApplyBtn()
+{
+    QString txt(ui->textEdit->toPlainText());
+    emit ui->textEdit->inputFileSignal(txt);
+    ui->textEdit->setReadOnly(true);
+}

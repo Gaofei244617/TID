@@ -127,6 +127,10 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
                 m_contour.lanes[laneID] = TIDLane();
                 m_contour.lanes[laneID].type = drawMode;
                 m_contour.lanes[laneID].lane = std::move(vecPointCache);
+                //if (m_contour.lanes[laneID].lane.size() != 4)
+                //{
+                //    QMessageBox::warning(nullptr, nullptr, QString::fromLocal8Bit("车道边数不为4"));
+                //}
             }
             else if (drawMode == "region")
             {
