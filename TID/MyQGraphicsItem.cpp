@@ -38,22 +38,23 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
+    auto size = this->scene()->views().at(0)->size();
     if (m_contour.lanes.size() > 0 || m_contour.regions.size() > 0 || vecPointCache.size() > 0)
     {
         QColor orange(0xff, 0x7f, 0);
         painter->setRenderHints(QPainter::Antialiasing, true); // 抗锯齿
         painter->setFont(QFont("times", 18));
-        auto size = this->scene()->views().at(0)->size();
        
         // 分析区域
         for (const auto& it : m_contour.regions)
         {
             painter->setPen(QPen(Qt::yellow, 2));
             const TIDRegion& tidRegion = it.second;
-            painter->drawPolygon(toPixelPolygon(tidRegion.region, size));
+            auto polygon = toPixelPolygon(tidRegion.region, size);
+            painter->drawPolygon(polygon);
             painter->drawText(toPixelPoint(tidRegion.region.at(0), size), QString("#%1").arg(it.first));
             painter->setPen(QPen(Qt::green, 5));
-            painter->drawPoints(toPixelPolygon(tidRegion.region, size));
+            painter->drawPoints(polygon);
         }
 
         // 车道
@@ -70,17 +71,18 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             }
 
             // 车道区域
-            painter->drawPolygon(toPixelPolygon(tidLane.lane, size));
+            auto polygon = toPixelPolygon(tidLane.lane, size);
+            painter->drawPolygon(polygon);
             painter->drawText(toPixelPoint(tidLane.lane.at(0), size), QString("#%1").arg(it.first));
             painter->setPen(QPen(Qt::green, 5));
-            painter->drawPoints(toPixelPolygon(tidLane.lane, size));
+            painter->drawPoints(polygon);
             
             // 车道方向线
             if (!tidLane.direction.isNull())
             {
                 auto line = QLine(toPixelLine(tidLane.direction, size));
                 QBrush brush = tidLane.type == "BusLane" ? QBrush(Qt::blue) : QBrush(orange);
-                painter->setPen(QPen(brush, 2));
+                painter->setPen(QPen(brush, 2, Qt::SolidLine, Qt::FlatCap));
 
                 // 绘制箭头
                 painter->drawLine(line);
@@ -94,11 +96,14 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         }
 
         // 车道虚拟线圈
-        painter->setPen(QPen(Qt::red, 1.5, Qt::DashDotLine));
         for (const auto& it : m_contour.lanes)
         {
+            painter->setPen(QPen(Qt::red, 1.5, Qt::DashDotLine));
             const auto& loop = it.second.virtualLoop;
-            painter->drawPolygon(toPixelPolygon(loop, size));
+            auto polygon = toPixelPolygon(loop, size);
+            painter->drawPolygon(polygon);
+            painter->setPen(QPen(orange, 4));
+            painter->drawPoints(polygon);
         }
 
         // 绘制中的图形
@@ -144,4 +149,9 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             }
         }
     }
+
+    painter->setPen(QPen(Qt::gray, 0.5, Qt::DotLine));
+    auto pt = toPixelPoint(ptCache, size);
+    painter->drawLine(QPoint(0, pt.y()), QPoint(size.width(), pt.y()));
+    painter->drawLine(QPoint(pt.x(), 0), QPoint(pt.x(), size.height()));
 }

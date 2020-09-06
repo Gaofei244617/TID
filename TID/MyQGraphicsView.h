@@ -29,7 +29,8 @@ public:
 	void setContour(const QString& str);
 
 	void mouseMoveEvent(QMouseEvent* event);
-	void mousePressEvent(QMouseEvent* event);
+	//void mousePressEvent(QMouseEvent* event);
+	void mouseReleaseEvent(QMouseEvent* event);
 	void dragEnterEvent(QDragEnterEvent* event); //拖动进入事件
 	void dropEvent(QDropEvent* event);
 	void resizeEvent(QResizeEvent* event);        // 缩放事件

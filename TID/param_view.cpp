@@ -78,12 +78,30 @@ void ParamView::clickOnExportBtn()
 
 void ParamView::clickOnEditBtn()
 {
-    ui->textEdit->setReadOnly(false);
+    // ÉèÖÃÎª¿É±à¼­×´Ì¬
+    if (ui->textEdit->isReadOnly())
+    {
+        ui->textEdit->setReadOnly(false);
+        ui->editButton->setText(QString::fromLocal8Bit("È¡Ïû±à¼­"));
+        QPalette palette = ui->textEdit->palette();
+        palette.setColor(QPalette::Base, Qt::black);
+        palette.setColor(QPalette::Text, Qt::green);
+        ui->textEdit->setPalette(palette);
+    }
+    // ÉèÖÃÎª²»¿É±à¼­×´Ì¬
+    else
+    {
+        ui->textEdit->setReadOnly(true);
+        ui->editButton->setText(QString::fromLocal8Bit("±à¼­"));
+        QPalette palette = ui->textEdit->palette();
+        palette.setColor(QPalette::Base, Qt::white);
+        palette.setColor(QPalette::Text, Qt::black);
+        ui->textEdit->setPalette(palette);
+    }
 }
 
 void ParamView::clickOnApplyBtn()
 {
     QString txt(ui->textEdit->toPlainText());
     emit ui->textEdit->inputFileSignal(txt);
-    ui->textEdit->setReadOnly(true);
 }

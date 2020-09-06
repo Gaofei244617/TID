@@ -80,7 +80,7 @@ void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
 }
 
 // 鼠标单击事件
-void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
+void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 {
     if (item == nullptr)
     {
