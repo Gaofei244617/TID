@@ -150,7 +150,7 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         }
     }
 
-    painter->setPen(QPen(Qt::gray, 0.5, Qt::DotLine));
+    painter->setPen(QPen(Qt::gray, 0.5, Qt::DashDotLine));
     auto pt = toPixelPoint(ptCache, size);
     painter->drawLine(QPoint(0, pt.y()), QPoint(size.width(), pt.y()));
     painter->drawLine(QPoint(pt.x(), 0), QPoint(pt.x(), size.height()));

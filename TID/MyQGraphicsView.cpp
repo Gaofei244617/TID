@@ -4,12 +4,14 @@
 #include "common.h"
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QFileInfo>
 
 MyQGraphicsView::MyQGraphicsView(QWidget* parent)
     :QGraphicsView(parent),
     scene(new MyQGraphicsScene(this)),
     pixItem(nullptr),
     item(nullptr),
+    frameNum(0),
     drawMode("BusLane")
 {
     this->setStyleSheet("padding: 0px; border: 0px;");
@@ -179,8 +181,51 @@ void MyQGraphicsView::dragEnterEvent(QDragEnterEvent* event)
     event->acceptProposedAction();
 }
 
+// 拖拽放下事件
+void MyQGraphicsView::dropEvent(QDropEvent* event) 
+{
+    const QMimeData* qm = event->mimeData();          // 获取MIMEData
+    filePath = qm->urls()[0].toLocalFile();           // 是获取拖动文件的本地路径
+    actionOnOpenFile(filePath);
+}
+
 void MyQGraphicsView::actionOnOpenFile(QString filePath)
 {
+    QFileInfo file_info(filePath);
+
+    // Json文件
+    if (file_info.suffix() == "json")
+    {
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(nullptr, nullptr, "Can not open file\n" + filePath);
+            return;
+        }
+
+        QTextStream in(&file);
+        auto text = in.readAll();
+        file.close();
+
+        // 解析json
+        rapidjson::Document doc;
+        doc.Parse(text.toStdString().c_str());
+        if (doc.HasParseError())
+        {
+            QMessageBox::critical(nullptr, nullptr, "Fail to Parse TID Json!");
+            return;
+        }
+        setContour(text);
+        if (item != nullptr)
+        {
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+            item->update();
+            emit updateJsonSignal(m_contour.toJsonString());
+        }
+        return;
+    }
+
+    // 视频文件
     if (cap.isOpened())
     {
         cap.release();
@@ -194,6 +239,8 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
     }
     frameNum = cap.get(CV_CAP_PROP_FRAME_COUNT);
     auto fps = cap.get(CV_CAP_PROP_FPS);
+    auto width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+    auto height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
     cap >> frame;
     setImage(frame);
 
@@ -201,6 +248,8 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
     info.insert("Name", filePath);
     info.insert("FrameCount", frameNum);
     info.insert("FPS", fps);
+    info.insert("Width", width);
+    info.insert("Height", height);
     info.insert("Time", round(frameNum / fps * 100.0 / 60.0) / 100.0);  // 视频时长(min)
     emit openFileSignal(QJsonDocument(info).toJson(QJsonDocument::Compact));
 }
@@ -219,14 +268,6 @@ void MyQGraphicsView::setContour(const QString& str)
     {
         QMessageBox::about(nullptr, nullptr, "Please open video first.");
     }
-}
-
-// 拖拽放下事件
-void MyQGraphicsView::dropEvent(QDropEvent* event) 
-{
-    const QMimeData* qm = event->mimeData();          // 获取MIMEData
-    filePath = qm->urls()[0].toLocalFile();           // 是获取拖动文件的本地路径
-    actionOnOpenFile(filePath);
 }
 
 // 设置绘图模式

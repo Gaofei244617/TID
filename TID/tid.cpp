@@ -19,8 +19,7 @@ TID::TID(QWidget *parent)
     ui->graphicsView->setMouseTracking(true);
     ui->graphicsView->setDragMode(QGraphicsView::RubberBandDrag);
     
-    ui->slider->setMaximum(1000);
-    ui->slider->setSingleStep(1);
+    this->resize(QSize(850, 700));
 
     buttonGroup = new QButtonGroup(this);
     buttonGroup->setExclusive(true);
@@ -48,10 +47,12 @@ void TID::onOpenVideo(const QString& info)
     QJsonDocument doc = QJsonDocument::fromJson(info.toUtf8());
     QJsonObject obj = doc.object();
     QString name = obj.take("Name").toString();
-    QString frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]   时长: [%3 min]")
+    QString frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]   时长: [%3 min]   分辨率: [%4*%5]")
         .arg(obj.take("FPS").toDouble())
         .arg(obj.take("FrameCount").toDouble())
-        .arg(obj.take("Time").toDouble());
+        .arg(obj.take("Time").toDouble())
+        .arg(obj.take("Width").toInt())
+        .arg(obj.take("Height").toInt());
 
     this -> setWindowTitle(name);
     ui->label2->setText(frameInfo);
