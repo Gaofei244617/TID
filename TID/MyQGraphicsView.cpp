@@ -12,7 +12,9 @@ MyQGraphicsView::MyQGraphicsView(QWidget* parent)
     pixItem(nullptr),
     item(nullptr),
     frameNum(0),
-    drawMode("BusLane")
+    drawMode("BusLane"),
+    cpt(nullptr),
+    dragPointFlag(false)
 {
     this->setStyleSheet("padding: 0px; border: 0px;");
     this->setScene(scene);
@@ -71,6 +73,12 @@ void MyQGraphicsView::setImage(const cv::Mat& imgFrame)
 void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
 {
     QPoint pt = toRelativePoint(event->pos(), this->size());
+    // 鼠标按下状态
+    if (cpt != nullptr)
+    {
+        *cpt = pt;
+        dragPointFlag = true;
+    }
     ptCache = pt;
     emit mouseMoveSignal(pt);
 
@@ -78,14 +86,37 @@ void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
     {
         static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
         item->update();
+        emit updateJsonSignal(m_contour.toJsonString());
+    }
+}
+
+// 鼠标按下事件
+void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
+{
+    QPoint pt = toRelativePoint(event->pos(), this->size());
+    
+    QPoint* point = nullptr;
+    double dist = 0xffff;
+
+    std::tie(point, dist) = findPoint(m_contour, pt);
+    if (dist < 100)
+    {
+        cpt = point;
     }
 }
 
 // 鼠标单击事件
 void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 {
+    cpt = nullptr;
     if (item == nullptr)
     {
+        return;
+    }
+    
+    if (dragPointFlag)
+    {
+        dragPointFlag = false;
         return;
     }
 
@@ -96,11 +127,11 @@ void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
         vecPointCache.append(toRelativePoint(point, this->size()));
         if (drawMode == "direction" && vecPointCache.size() == 2)
         {
-            QLine directLine = QLine(vecPointCache[0], vecPointCache[1]);
+            Direct directLine(vecPointCache[0], vecPointCache[1]);
             int id = getLaneID(directLine, m_contour);
             if (id != -1)
             {
-                m_contour.lanes[id].direction = std::move(directLine);
+                m_contour.lanes[id].direction = directLine;
             }
             vecPointCache.clear();
         }

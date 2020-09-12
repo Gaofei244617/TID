@@ -66,11 +66,11 @@ QString TIDContour::toJsonString()const
 
         const auto& line = tidLane.second.direction;
         Value start(kArrayType);
-        start.PushBack(line.x1(), allo);
-        start.PushBack(line.y1(), allo);
+        start.PushBack(line.start.x(), allo);
+        start.PushBack(line.start.y(), allo);
         Value end(kArrayType);
-        end.PushBack(line.x2(), allo);
-        end.PushBack(line.y2(), allo);
+        end.PushBack(line.end.x(), allo);
+        end.PushBack(line.end.y(), allo);
         Value direct(kObjectType);
         direct.AddMember("Start", start, allo);
         direct.AddMember("End", end, allo);
@@ -162,7 +162,7 @@ TIDContour getTIDContour(const QString& json)
 
         QPoint start(lane["Direction"]["Start"][0].GetInt(), lane["Direction"]["Start"][1].GetInt());
         QPoint end(lane["Direction"]["End"][0].GetInt(), lane["Direction"]["End"][1].GetInt());
-        QLine direction(start, end);
+        Direct direction(start, end);
 
         QPolygon virtualLoop;
         for (int i = 0; i < lane["VirtualLoop"].Size(); i += 2)
@@ -209,24 +209,24 @@ QPolygon toPixelPolygon(const QPolygon& polygon, const QSize& size)
     return pixelPolygon;
 }
 
-QLine toPixelLine(const QLine& line, const QSize& size)
+Direct toPixelLine(const Direct& line, const QSize& size)
 {
     if (line.isNull())
     {
-        return QLine();
+        return Direct();
     }
-    return QLine(toPixelPoint(line.p1(), size), toPixelPoint(line.p2(), size));
+    return Direct(toPixelPoint(line.start, size), toPixelPoint(line.end, size));
 }
 
-int getLaneID(const QLine& line, const TIDContour& contour)
+int getLaneID(const Direct& line, const TIDContour& contour)
 {
     int laneID = -1;
     for (const auto& it : contour.lanes)
     {
         int id = it.first;
         const auto& lane = it.second.lane;
-        if (lane.containsPoint(line.p1(), Qt::OddEvenFill) &&
-            lane.containsPoint(line.p2(), Qt::OddEvenFill))
+        if (lane.containsPoint(line.start, Qt::OddEvenFill) &&
+            lane.containsPoint(line.end, Qt::OddEvenFill))
         {
             laneID = id;
             break;
@@ -274,4 +274,82 @@ QVector<QPointF> getArrow(const QLineF& line, const int arrowSize)
     QPointF pt2 = line.p2() + QPointF(sin(angle - 2 * PI / 3) * arrowSize, cos(angle - 2 * PI / 3) * arrowSize);
 
     return QVector<QPointF>{pt1, pt2};
+}
+
+double square(const double num)
+{
+    return num * num;
+}
+
+double distance(const QPoint& pt1, const QPoint& pt2)
+{
+    return sqrt(double(square(pt2.x() - pt1.x()) + square(pt2.y() - pt1.y())));
+}
+
+// 查找最近点
+std::tuple<QPoint*, double> findPoint(const TIDContour& contour, const QPoint& pt)
+{
+    QPoint* point = nullptr;
+    double dist = 0xffff;
+
+    // 车道
+    for (const auto& it : contour.lanes)
+    {
+        // 车道
+        const auto& lanePts = it.second.lane;
+        for (const auto& p : lanePts)
+        {
+            double d = distance(p, pt);
+            if (d < dist)
+            {
+                point = const_cast<QPoint*>(&p);
+                dist = d;
+            }
+        }
+
+        // 虚拟线圈
+        const auto& loopPts = it.second.virtualLoop;
+        for (const auto& p : loopPts)
+        {
+            double d = distance(p, pt);
+            if (d < dist)
+            {
+                point = const_cast<QPoint*>(&p);
+                dist = d;
+            }
+        }
+
+        // 方向线
+        const auto& start = it.second.direction.start;
+        const auto& end = it.second.direction.end;
+        double d = distance(start, pt);
+        if (d < dist)
+        {
+            point = const_cast<QPoint*>(&start);
+            dist = d;
+        }
+        d = distance(end, pt);
+        if (d < dist)
+        {
+            point = const_cast<QPoint*>(&end);
+            dist = d;
+        }
+    }
+
+    // 分析区域
+    for (const auto& it : contour.regions)
+    {
+        const auto& pts = it.second.region;
+        for (const auto& p : pts)
+        {
+            double d = distance(p, pt);
+            if (d < dist)
+            {
+                point = const_cast<QPoint*>(&p);
+                dist = d;
+            }
+        }
+    }
+
+    return std::make_tuple(point, dist);
 }

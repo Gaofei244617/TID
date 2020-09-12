@@ -9,11 +9,31 @@
 #include <QPolygon>
 #include <QLine>
 #include "rapidjson/document.h"
+#include <tuple>
+
+enum class ContourType
+{
+	NONE,
+	LANE,
+	VIRTUAL_LOOP,
+	ARROW,
+	REGION
+};
+
+struct Direct
+{
+	QPoint start;
+	QPoint end;
+	Direct() :start(QPoint(0, 0)), end(QPoint(0, 0)) {}
+	Direct(const QPoint& pt1, const QPoint& pt2) :start(pt1), end(pt2) {}
+	Direct(const Direct& direct) :start(direct.start), end(direct.end) {}
+	bool isNull()const { return start == QPoint(0, 0) && end == QPoint(0, 0); }
+};
 
 struct TIDLane
 {
 	QString type;
-	QLine direction;
+	Direct direction;
 	QPolygon lane;
 	QPolygon virtualLoop;
 };
@@ -33,10 +53,10 @@ struct TIDContour
 QPoint toRelativePoint(const QPoint& pt, const QSize& size);
 QPoint toPixelPoint(const QPoint& pt, const QSize& size);
 QPolygon toPixelPolygon(const QPolygon& polygon, const QSize& size);
-QLine toPixelLine(const QLine& line, const QSize& size);
+Direct toPixelLine(const Direct& line, const QSize& size);
 
 // 获取方向线所在车道ID
-int getLaneID(const QLine& line, const TIDContour& contour);
+int getLaneID(const Direct& line, const TIDContour& contour);
 // 获取虚拟线圈所在车道ID
 int getLaneID(const QPolygon& polygon, const TIDContour& contour);
 
@@ -48,3 +68,11 @@ TIDContour getTIDContour(const QString& json);
 QString JsonToString(const rapidjson::Document& doc);
 QString JsonToPrettyString(const rapidjson::Document& doc);
 QString JsonToPrettyString2(const rapidjson::Document& doc);
+
+// 查找最近点
+std::tuple<QPoint*, double> findPoint(const TIDContour& contour, const QPoint& pt);
+
+double square(const double num);
+
+// 计算两点间距离
+double distance(const QPoint& pt1, const QPoint& pt2);

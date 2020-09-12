@@ -7,10 +7,9 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
-TID::TID(QWidget *parent)
+TID::TID(QWidget* parent)
     : QMainWindow(parent),
-    ui(new Ui::TIDClass()),
-    paramView(new ParamView())
+    ui(new Ui::TIDClass())
 {
     ui->setupUi(this);
     // 鼠标变成十字光标
@@ -36,10 +35,10 @@ TID::TID(QWidget *parent)
     QObject::connect(ui->graphicsView, &MyQGraphicsView::openFileSignal, this, &TID::onOpenVideo);
     QObject::connect(ui->slider, &QSlider::valueChanged, ui->graphicsView, &MyQGraphicsView::onSliderChangeed);
     QObject::connect(buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked), ui->graphicsView, &MyQGraphicsView::setRegionMode);
-    QObject::connect(ui->graphicsView, &MyQGraphicsView::updateJsonSignal, paramView, &ParamView::setContent);
+    QObject::connect(ui->graphicsView, &MyQGraphicsView::updateJsonSignal, &paramView, &ParamView::setContent);
     QObject::connect(ui->clearBtn, &QPushButton::clicked, ui->graphicsView, &MyQGraphicsView::clearContour);
     QObject::connect(ui->openBtn, &QPushButton::clicked, this, &TID::clickOnOpenFile);
-    QObject::connect(paramView->ui->textEdit, &MyQTextEdit::inputFileSignal, ui->graphicsView, &MyQGraphicsView::setContour);
+    QObject::connect(paramView.ui->textEdit, &MyQTextEdit::inputFileSignal, ui->graphicsView, &MyQGraphicsView::setContour);
 }
 
 void TID::onOpenVideo(const QString& info)
@@ -61,7 +60,7 @@ void TID::onOpenVideo(const QString& info)
 // ViewJson
 void TID::clickOnViewBtn()
 {
-    paramView->show();
+    paramView.show();
 }
 
 // label show point
@@ -75,3 +74,10 @@ void TID::clickOnOpenFile()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", "", 0);
     ui->graphicsView->actionOnOpenFile(fileName);
 }
+
+// 关闭窗口
+void TID::closeEvent(QCloseEvent* event)
+{
+    paramView.close();
+}
+

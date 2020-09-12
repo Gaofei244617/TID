@@ -29,7 +29,7 @@ public:
 	void setContour(const QString& str);
 
 	void mouseMoveEvent(QMouseEvent* event);
-	//void mousePressEvent(QMouseEvent* event);
+	void mousePressEvent(QMouseEvent* event);
 	void mouseReleaseEvent(QMouseEvent* event);
 	void dragEnterEvent(QDragEnterEvent* event); //拖动进入事件
 	void dropEvent(QDropEvent* event);
@@ -49,7 +49,9 @@ protected:
 	double frameNum;    // 视频总帧数
 	cv::Mat frame;      // 当前视频帧
 	QString drawMode;
-	TIDContour m_contour;
+	TIDContour m_contour;  // 相对坐标
+	QPoint* cpt;           // 鼠标选中的点
+	bool dragPointFlag;    // 上一操作是否为拖拽顶点操作
 
 private:
 	QVector<QPoint> vecPointCache;

@@ -80,10 +80,11 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             // 车道方向线
             if (!tidLane.direction.isNull())
             {
-                auto line = QLine(toPixelLine(tidLane.direction, size));
+                auto direct = Direct(toPixelLine(tidLane.direction, size));
                 QBrush brush = tidLane.type == "BusLane" ? QBrush(Qt::blue) : QBrush(orange);
                 painter->setPen(QPen(brush, 2, Qt::SolidLine, Qt::FlatCap));
 
+                QLine line(direct.start, direct.end);
                 // 绘制箭头
                 painter->drawLine(line);
                 auto pts = getArrow(line, 18);

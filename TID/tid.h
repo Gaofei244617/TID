@@ -9,6 +9,7 @@
 #include "MyQGraphicsScene.h"
 #include <QPoint>
 #include <QString>
+#include <QCloseEvent> 
 
 class TID : public QMainWindow
 {
@@ -19,7 +20,7 @@ public:
 
 private:
     Ui::TIDClass* ui;
-    ParamView* paramView;
+    ParamView paramView;
     QButtonGroup* buttonGroup;
 
 protected:
@@ -27,4 +28,5 @@ protected:
     void clickOnViewBtn();
     void showPoint(const QPoint& pt);
     void clickOnOpenFile();
+    void closeEvent(QCloseEvent* event);  // ¹Ø±Õ´°¿Ú
 };
