@@ -122,14 +122,14 @@ QString TIDContour::toJsonString()const
         incidentParam.AddMember("CongestionLength", 90, allo);
         incidentParam.AddMember("CongestionInterval", 30, allo);
         incidentParam.AddMember("IllegalParkTime", 20, allo);
-        regionObj.AddMember("IncidentParm", incidentParam, allo);
+        regionObj.AddMember("IncidentParam", incidentParam, allo);
         /************************************************************/
         regionArry.PushBack(regionObj, allo);
     }
     cfg.AddMember("AnalysisRegion", regionArry, allo);
 
     /************************************************************/
-    cfg.AddMember("ReportingInterval", 25, allo);
+    cfg.AddMember("ReportingInterval", 60, allo);
     /************************************************************/
     doc.AddMember("config", cfg, allo);
 
