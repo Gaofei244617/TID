@@ -53,13 +53,15 @@ void TID::onOpenVideo(const QString& info)
         .arg(obj.take("Width").toInt())
         .arg(obj.take("Height").toInt());
 
-    this -> setWindowTitle(name);
+    this->setWindowTitle(name);
+    paramView.setWindowTitle(name);
     ui->label2->setText(frameInfo);
 }
 
 // ViewJson
 void TID::clickOnViewBtn()
 {
+    paramView.setWindowTitle(this->windowTitle());
     paramView.show();
 }
 
