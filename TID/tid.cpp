@@ -46,12 +46,24 @@ void TID::onOpenVideo(const QString& info)
     QJsonDocument doc = QJsonDocument::fromJson(info.toUtf8());
     QJsonObject obj = doc.object();
     QString name = obj.take("Name").toString();
-    QString frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]   时长: [%3 min]   分辨率: [%4*%5]")
-        .arg(obj.take("FPS").toDouble())
-        .arg(obj.take("FrameCount").toDouble())
-        .arg(obj.take("Time").toDouble())
-        .arg(obj.take("Width").toInt())
-        .arg(obj.take("Height").toInt());
+    QString fileType = obj.take("FileType").toString();
+   
+    QString frameInfo;
+    if (fileType == "Video")
+    {
+        frameInfo = QString::fromLocal8Bit("帧率: [%1]   帧数: [%2]   时长: [%3 min]   分辨率: [%4*%5]")
+            .arg(obj.take("FPS").toDouble())
+            .arg(obj.take("FrameCount").toDouble())
+            .arg(obj.take("Time").toDouble())
+            .arg(obj.take("Width").toInt())
+            .arg(obj.take("Height").toInt());
+    }
+    else if (fileType == "Image")
+    {
+        frameInfo = QString::fromLocal8Bit("分辨率: [%1 * %2]")
+            .arg(obj.take("Width").toInt())
+            .arg(obj.take("Height").toInt());
+    }
 
     this->setWindowTitle(name);
     paramView.setWindowTitle(name);

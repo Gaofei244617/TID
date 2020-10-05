@@ -223,9 +223,9 @@ void MyQGraphicsView::dropEvent(QDropEvent* event)
 void MyQGraphicsView::actionOnOpenFile(QString filePath)
 {
     QFileInfo file_info(filePath);
-
+    QString suffix = file_info.suffix();   // 文件后缀名
     // Json文件
-    if (file_info.suffix() == "json")
+    if (suffix == "json")
     {
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -256,6 +256,23 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
         return;
     }
 
+    // 图片文件
+    if (suffix == "jpg" || suffix == "bmp" || suffix == "png")
+    {
+        frame = cv::imread(filePath.toStdString());
+        setImage(frame);
+
+        QJsonObject info;
+        cv::Size imgSize = frame.size();
+        info.insert("Name", filePath);
+        info.insert("FileType", "Image");
+        info.insert("Width", imgSize.width);
+        info.insert("Height", imgSize.height);
+        emit openFileSignal(QJsonDocument(info).toJson(QJsonDocument::Compact));
+
+        return;
+    }
+
     // 视频文件
     if (cap.isOpened())
     {
@@ -277,6 +294,7 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
 
     QJsonObject info;
     info.insert("Name", filePath);
+    info.insert("FileType", "Video");
     info.insert("FrameCount", frameNum);
     info.insert("FPS", fps);
     info.insert("Width", width);
