@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFileInfo>
+#include <QDialog>
 
 MyQGraphicsView::MyQGraphicsView(QWidget* parent)
     :QGraphicsView(parent),
@@ -84,7 +85,7 @@ void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
 
     if (item != nullptr)
     {
-        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
         item->update();
         emit updateJsonSignal(m_contour.toJsonString());
     }
@@ -105,7 +106,7 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
     }
 }
 
-// 鼠标单击事件
+// 鼠标单击释放事件
 void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 {
     cpt = nullptr;
@@ -135,7 +136,29 @@ void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
             }
             vecPointCache.clear();
         }
-        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+
+        // 测量像素
+        if (drawMode == "mesure")
+        {
+            m_mesureData.clear();
+            if (vecPointCache.size() == 2)
+            {
+                m_mesureData = vecPointCache;
+                vecPointCache.clear();
+
+                double dx = (m_mesureData[0].x() - m_mesureData[1].x()) / 10000.0 * frame.cols;
+                double dy = (m_mesureData[0].y() - m_mesureData[1].y()) / 10000.0 * frame.rows;
+                int len = static_cast<int>(sqrt(dx * dx + dy * dy));
+                QString s = QString::fromLocal8Bit("像素: %1 px  ").arg(len);
+                QMessageBox::about(nullptr, nullptr, s);
+                //QDialog* dialog = new QDialog();
+                //dialog->setAttribute(Qt::WA_DeleteOnClose);
+                //dialog->setModal(true);
+                //dialog->show();
+            }
+        }
+
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
         item->update();
         emit updateJsonSignal(m_contour.toJsonString());
     }
@@ -146,7 +169,7 @@ void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
         {
             vecPointCache.clear();
             ptCache = QPoint(0, 0);
-            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
             item->update();
         }
         else
@@ -186,7 +209,7 @@ void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
             }
             vecPointCache.clear();
             ptCache = QPoint(0, 0);
-            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
             item->update();
             emit updateJsonSignal(m_contour.toJsonString());
         }
@@ -201,7 +224,7 @@ void MyQGraphicsView::resizeEvent(QResizeEvent* event)
         setImage(frame);
         if (item != nullptr)
         {
-            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
             item->update();
         }
     }
@@ -249,7 +272,7 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
         setContour(text);
         if (item != nullptr)
         {
-            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+            static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
             item->update();
             emit updateJsonSignal(m_contour.toJsonString());
         }
@@ -310,7 +333,7 @@ void MyQGraphicsView::setContour(const QString& str)
     ptCache = QPoint(0, 0);
     if (item != nullptr)
     {
-        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
         item->update();
     }
     else
@@ -339,6 +362,9 @@ void MyQGraphicsView::setRegionMode(const int mode)
     case 4:
         drawMode = "loop";
         break;
+    case 5:
+        drawMode = "mesure";
+        break;
     default:
         drawMode = "";
     }
@@ -353,7 +379,7 @@ void MyQGraphicsView::clearContour()
     ptCache = QPoint(0, 0);
     if (item != nullptr)
     {
-        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, vecPointCache, ptCache);
+        static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
         item->update();
         emit updateJsonSignal(m_contour.toJsonString());
     }

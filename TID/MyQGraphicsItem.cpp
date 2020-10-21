@@ -14,10 +14,11 @@ MyQGraphicsItem::MyQGraphicsItem(QGraphicsItem* parent) :
 
 MyQGraphicsItem::~MyQGraphicsItem(){}
 
-void MyQGraphicsItem::updateParam(const QString& mode, const TIDContour& contour, const QVector<QPoint>& vecPoint, const QPoint& pt)
+void MyQGraphicsItem::updateParam(const QString& mode, const TIDContour& contour, const QVector<QPoint>& pts, const QVector<QPoint>& vecPoint, const QPoint& pt)
 {
     this->mode = mode;
     this->m_contour = contour;
+    this->m_mesureData = pts;
     this->vecPointCache = vecPoint;
     this->ptCache = pt;
 }
@@ -39,7 +40,10 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     Q_UNUSED(widget);
 
     auto size = this->scene()->views().at(0)->size();
-    if (m_contour.lanes.size() > 0 || m_contour.regions.size() > 0 || vecPointCache.size() > 0)
+    if (m_contour.lanes.size() > 0 || 
+        m_contour.regions.size() > 0 || 
+        m_mesureData.size() > 0 || 
+        vecPointCache.size() > 0)
     {
         QColor orange(0xff, 0x7f, 0);
         painter->setRenderHints(QPainter::Antialiasing, true); // 抗锯齿
@@ -96,6 +100,14 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             }
         }
 
+        // 测量线
+        if (m_mesureData.size() == 2)
+        {
+            painter->setPen(QPen(QBrush(Qt::yellow), 1.5, Qt::DashDotLine, Qt::FlatCap));
+            QLine line(toPixelPoint(m_mesureData[0], size), toPixelPoint(m_mesureData[1], size));
+            painter->drawLine(line);
+        }
+
         // 车道虚拟线圈
         for (const auto& it : m_contour.lanes)
         {
@@ -129,6 +141,10 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
                         break;
                     }
                 }
+            }
+            else if (mode == "mesure")
+            {
+                painter->setPen(QPen(QBrush(Qt::yellow), 1.5, Qt::DashDotLine, Qt::FlatCap));
             }
             else if (mode == "region")
             {

@@ -27,6 +27,8 @@ TID::TID(QWidget* parent)
     buttonGroup->addButton(ui->radioButtonRegion, 2);
     buttonGroup->addButton(ui->radioButtonDirect, 3);
     buttonGroup->addButton(ui->radioButtonLoop, 4);
+    buttonGroup->addButton(ui->radioButtonMesure, 5);
+
     ui->radioButtonLane->setChecked(true);
     
     // Á¬½ÓÐÅºÅ/²Û

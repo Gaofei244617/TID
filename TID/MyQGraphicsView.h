@@ -46,12 +46,13 @@ protected:
 	QGraphicsItem* item;
 	QString filePath;
 	cv::VideoCapture cap;
-	double frameNum;    // 视频总帧数
-	cv::Mat frame;      // 当前视频帧
+	double frameNum;       // 视频总帧数
+	cv::Mat frame;         // 当前视频帧
 	QString drawMode;
 	TIDContour m_contour;  // 相对坐标
 	QPoint* cpt;           // 鼠标选中的点
 	bool dragPointFlag;    // 上一操作是否为拖拽顶点操作
+	QVector<QPoint> m_mesureData;  // 测量点
 
 private:
 	QVector<QPoint> vecPointCache;
