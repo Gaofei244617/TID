@@ -41,6 +41,7 @@ TID::TID(QWidget* parent)
     QObject::connect(ui->clearBtn, &QPushButton::clicked, ui->graphicsView, &MyQGraphicsView::clearContour);
     QObject::connect(ui->openBtn, &QPushButton::clicked, this, &TID::clickOnOpenFile);
     QObject::connect(paramView.ui->textEdit, &MyQTextEdit::inputFileSignal, ui->graphicsView, &MyQGraphicsView::setContour);
+    QObject::connect(ui->exportPicBtn, &QPushButton::clicked, this, &TID::clickOnExportPicBtn);
 }
 
 void TID::onOpenVideo(const QString& info)
@@ -70,6 +71,7 @@ void TID::onOpenVideo(const QString& info)
     this->setWindowTitle(name);
     paramView.setWindowTitle(name);
     ui->label2->setText(frameInfo);
+    ui->slider->setValue(0);
 }
 
 // ViewJson
@@ -96,4 +98,16 @@ void TID::closeEvent(QCloseEvent* event)
 {
     paramView.close();
 }
+
+// µ¼³öÍ¼Æ¬
+void TID::clickOnExportPicBtn()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image"), tr("image.jpg"), tr("Image Files (*.jpg)"));
+    if (!fileName.isNull())
+    {
+        cv::imwrite(fileName.toStdString(), ui->graphicsView->getCurrentFrame());
+    }
+    return;
+}
+
 

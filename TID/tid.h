@@ -29,4 +29,5 @@ protected:
     void showPoint(const QPoint& pt);
     void clickOnOpenFile();
     void closeEvent(QCloseEvent* event);  // 关闭窗口
+    void TID::clickOnExportPicBtn();      // 导出图片
 };

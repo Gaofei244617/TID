@@ -342,6 +342,12 @@ void MyQGraphicsView::setContour(const QString& str)
     }
 }
 
+// 获取当前视频帧
+cv::Mat MyQGraphicsView::getCurrentFrame()const
+{
+    return this->frame;
+}
+
 // 设置绘图模式
 void MyQGraphicsView::setRegionMode(const int mode)
 {

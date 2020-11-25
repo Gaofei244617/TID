@@ -27,6 +27,7 @@ public:
 	void clearContour();
 	void actionOnOpenFile(QString filePath);
 	void setContour(const QString& str);
+	cv::Mat getCurrentFrame()const;
 
 	void mouseMoveEvent(QMouseEvent* event);
 	void mousePressEvent(QMouseEvent* event);

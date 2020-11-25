@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>861</width>
+    <width>878</width>
     <height>526</height>
    </rect>
   </property>
@@ -84,6 +84,19 @@
          <set>Qt::AlignCenter</set>
         </property>
        </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
        <widget class="QRadioButton" name="radioButtonMesure">
@@ -182,6 +195,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="exportPicBtn">
+        <property name="text">
+         <string>导出图片</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="clearBtn">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -195,7 +215,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Clear</string>
+         <string>清空</string>
         </property>
        </widget>
       </item>
@@ -213,7 +233,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Open</string>
+         <string>打开</string>
         </property>
        </widget>
       </item>
@@ -233,7 +253,7 @@
          </font>
         </property>
         <property name="text">
-         <string>View Json</string>
+         <string>ViewJson</string>
         </property>
        </widget>
       </item>
