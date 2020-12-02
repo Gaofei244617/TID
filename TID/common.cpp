@@ -420,18 +420,74 @@ QVector<BndBox> getBndBox(QFile* file)
     return boxes;
 }
 
-// 背景图片上绘制目标框
-void drawBox(const QVector<BndBox>& boxes, cv::Mat& img)
+QVector<BndBox> getBndBox(QFile* file, const QSize& size)
 {
-    for (const auto& box : boxes)
-    {
-        std::string name = box.name.toStdString();
-        cv::Rect rect(box.xmin, box.ymin, box.xmax - box.xmin, box.ymax - box.ymin);
-        cv::Rect rect2(cv::Point(box.xmin-1, box.ymin), cv::Point(box.xmin + 16 * name.length(), std::max(box.ymin - 21, 0)));
+    QVector<BndBox> boxes;
+    int width = size.width();
+    int height = size.height();
 
-        cv::Point pt(box.xmin, box.ymin - 7);
-        cv::rectangle(img, rect, cv::Scalar(0, 0, 255), 2);
-        cv::rectangle(img, rect2, cv::Scalar(0, 0, 255), -1);
-        cv::putText(img, name, pt, cv::FONT_HERSHEY_TRIPLEX, 0.8, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+    QDomDocument doc;
+    if (!doc.setContent(file, false))
+    {
+        QMessageBox::warning(nullptr, nullptr, "Can not parse this xml file\n");
+        return boxes;
     }
+
+    QDomElement root = doc.documentElement();
+    if (root.tagName() != "annotation")
+    {
+        return boxes;
+    }
+
+    QDomNode child = root.firstChild();
+    while (!child.isNull())
+    {
+        if (child.toElement().tagName() == "object")
+        {
+            BndBox box;
+            QDomNode sub_child = child.toElement().firstChild();
+            while (!sub_child.isNull())
+            {
+                if (sub_child.toElement().tagName() == "name")
+                {
+                    box.name = sub_child.toElement().text();
+                }
+                else if (sub_child.toElement().tagName() == "bndbox")
+                {
+                    QDomNode sub2_child = sub_child.toElement().firstChild();
+                    while (!sub2_child.isNull())
+                    {
+                        int num = 0;
+                        QString tagName = sub2_child.toElement().tagName();
+                        if (tagName == "xmax")
+                        {
+                            num = sub2_child.toElement().text().toInt();
+                            box.xmax = static_cast<int>(num * 10000.0 / width);
+                        }
+                        else if (tagName == "xmin")
+                        {
+                            num = sub2_child.toElement().text().toInt();
+                            box.xmin = static_cast<int>(num * 10000.0 / width);
+                        }
+                        else if (tagName == "ymax")
+                        {
+                            num = sub2_child.toElement().text().toInt();
+                            box.ymax = static_cast<int>(num * 10000.0 / height);
+                        }
+                        else if (tagName == "ymin")
+                        {
+                            num = sub2_child.toElement().text().toInt();
+                            box.ymin = static_cast<int>(num * 10000.0 / height);
+                        }
+                        sub2_child = sub2_child.nextSibling();
+                    }
+                }
+                sub_child = sub_child.nextSibling();
+            }
+            boxes.push_back(box);
+        }
+        child = child.nextSibling();
+    }
+
+    return boxes;
 }

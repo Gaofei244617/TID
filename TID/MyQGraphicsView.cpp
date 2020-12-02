@@ -310,11 +310,15 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
             return;
         }
 
-        auto bndboxes = getBndBox(&file);
-        file.close();
-        drawBox(bndboxes, frame);
-        setImage(frame);
+        if (item != nullptr)
+        {
+            auto bndboxes = getBndBox(&file, QSize(frame.cols, frame.rows));
+            static_cast<MyQGraphicsItem*>(item)->setObjBox(bndboxes);
+            item->update();  // 调用paint成员函数
+            emit updateJsonSignal(m_contour.toJsonString());
+        }
 
+        file.close();
         return;
     }
 
@@ -408,6 +412,7 @@ void MyQGraphicsView::clearContour()
     if (item != nullptr)
     {
         static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
+        static_cast<MyQGraphicsItem*>(item)->setObjBox(QVector<BndBox>());
         item->update();
         emit updateJsonSignal(m_contour.toJsonString());
     }

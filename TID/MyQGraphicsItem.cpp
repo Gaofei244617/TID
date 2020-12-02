@@ -23,6 +23,11 @@ void MyQGraphicsItem::updateParam(const QString& mode, const TIDContour& contour
     this->ptCache = pt;
 }
 
+void MyQGraphicsItem::setObjBox(const QVector<BndBox>& boxes)
+{
+    this->m_boxes = boxes;
+}
+
 QRectF MyQGraphicsItem::boundingRect() const
 {
     auto it = this->scene();
@@ -167,6 +172,32 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         }
     }
 
+    // 绘制目标框
+    if (m_boxes.size() > 0)
+    {
+        painter->setRenderHints(QPainter::Antialiasing, true); // 抗锯齿
+        painter->setFont(QFont("Helvetica", 12));
+
+        const int width = size.width();
+        const int height = size.height();
+        int x = 0, y = 0, w = 0, h = 0;
+        for (const auto& box : m_boxes)
+        {
+            x = box.xmin / 10000.0 * width;;
+            y = box.ymin / 10000.0 * height;
+            w = (box.xmax - box.xmin) / 10000.0 * width;
+            h = (box.ymax - box.ymin) / 10000.0 * height;
+            QRect rect(x - 1, y - 17, 9 * box.name.size(), 17);
+
+            painter->setPen(QPen(Qt::red, 1.2, Qt::DashDotLine));
+            painter->drawRect(x, y, w, h);
+            painter->fillRect(rect, Qt::red);
+            painter->setPen(QPen(Qt::white, 1, Qt::SolidLine));
+            painter->drawText(x, y - 5, box.name);
+        }
+    }
+
+    // 标尺线
     painter->setPen(QPen(Qt::gray, 0.5, Qt::DashDotLine));
     auto pt = toPixelPoint(ptCache, size);
     painter->drawLine(QPoint(0, pt.y()), QPoint(size.width(), pt.y()));

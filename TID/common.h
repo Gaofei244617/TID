@@ -92,5 +92,5 @@ double distance(const QPoint& pt1, const QPoint& pt2);
 // 解析目标框
 QVector<BndBox> getBndBox(QFile* file);
 
-// 背景图片上绘制目标框
-void drawBox(const QVector<BndBox>& boxes, cv::Mat& img);
+// 解析目标框(万分比相对坐标)
+QVector<BndBox> getBndBox(QFile* file, const QSize& size);
