@@ -4,6 +4,7 @@
 #include "rapidjson/writer.h"  
 #include "rapidjson/stringbuffer.h"
 #include <QMessageBox>
+#include <QDomDocument>
 
 QString JsonToString(const rapidjson::Document& doc)
 {
@@ -352,4 +353,85 @@ std::tuple<QPoint*, double> findPoint(const TIDContour& contour, const QPoint& p
     }
 
     return std::make_tuple(point, dist);
+}
+
+// 解析目标框
+QVector<BndBox> getBndBox(QFile* file)
+{
+    QVector<BndBox> boxes;
+    QDomDocument doc;
+    if (!doc.setContent(file, false))
+    {
+        QMessageBox::warning(nullptr, nullptr, "Can not parse this xml file\n");
+        return boxes;
+    }
+
+    QDomElement root = doc.documentElement();
+    if (root.tagName() != "annotation")
+    {
+        return boxes;
+    }
+
+    QDomNode child = root.firstChild();
+    while (!child.isNull())
+    {
+        if (child.toElement().tagName() == "object")
+        {
+            BndBox box;
+            QDomNode sub_child = child.toElement().firstChild();
+            while (!sub_child.isNull())
+            {
+                if (sub_child.toElement().tagName() == "name")
+                {
+                    box.name = sub_child.toElement().text();
+                }
+                else if (sub_child.toElement().tagName() == "bndbox")
+                {
+                    QDomNode sub2_child = sub_child.toElement().firstChild();
+                    while (!sub2_child.isNull())
+                    {
+                        QString tagName = sub2_child.toElement().tagName();
+                        if (tagName == "xmax")
+                        {
+                            box.xmax = sub2_child.toElement().text().toInt();
+                        }
+                        else if (tagName == "xmin")
+                        {
+                            box.xmin = sub2_child.toElement().text().toInt();
+                        }
+                        else if (tagName == "ymax")
+                        {
+                            box.ymax = sub2_child.toElement().text().toInt();
+                        }
+                        else if (tagName == "ymin")
+                        {
+                            box.ymin = sub2_child.toElement().text().toInt();
+                        }
+                        sub2_child = sub2_child.nextSibling();
+                    }
+                }
+                sub_child = sub_child.nextSibling();
+            }
+            boxes.push_back(box);
+        }
+        child = child.nextSibling();
+    }
+
+    return boxes;
+}
+
+// 背景图片上绘制目标框
+void drawBox(const QVector<BndBox>& boxes, cv::Mat& img)
+{
+    for (const auto& box : boxes)
+    {
+        std::string name = box.name.toStdString();
+        cv::Rect rect(box.xmin, box.ymin, box.xmax - box.xmin, box.ymax - box.ymin);
+        cv::Rect rect2(cv::Point(box.xmin-1, box.ymin), cv::Point(box.xmin + 16 * name.length(), std::max(box.ymin - 21, 0)));
+
+        cv::Point pt(box.xmin, box.ymin - 7);
+        cv::rectangle(img, rect, cv::Scalar(0, 0, 255), 2);
+        cv::rectangle(img, rect2, cv::Scalar(0, 0, 255), -1);
+        cv::putText(img, name, pt, cv::FONT_HERSHEY_TRIPLEX, 0.8, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+    }
 }

@@ -26,7 +26,7 @@ private:
 protected:
     void onOpenVideo(const QString& info);
     void clickOnViewBtn();
-    void showPoint(const QPoint& pt);
+    void showPoint(const QPoint& pt, const QPoint& pt2);
     void clickOnOpenFile();
     void closeEvent(QCloseEvent* event);  // 关闭窗口
     void TID::clickOnExportPicBtn();      // 导出图片

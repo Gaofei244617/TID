@@ -10,6 +10,8 @@
 #include <QLine>
 #include "rapidjson/document.h"
 #include <tuple>
+#include <QFile>
+#include <opencv2/opencv.hpp>
 
 enum class ContourType
 {
@@ -50,6 +52,16 @@ struct TIDContour
 	QString toJsonString()const;
 };
 
+struct BndBox
+{
+	QString name;
+	int xmin;
+	int xmax;
+	int ymin;
+	int ymax;
+	BndBox() :xmin(0), xmax(0), ymin(0), ymax(0) {}
+};
+
 QPoint toRelativePoint(const QPoint& pt, const QSize& size);
 QPoint toPixelPoint(const QPoint& pt, const QSize& size);
 QPolygon toPixelPolygon(const QPolygon& polygon, const QSize& size);
@@ -76,3 +88,9 @@ double square(const double num);
 
 // 计算两点间距离
 double distance(const QPoint& pt1, const QPoint& pt2);
+
+// 解析目标框
+QVector<BndBox> getBndBox(QFile* file);
+
+// 背景图片上绘制目标框
+void drawBox(const QVector<BndBox>& boxes, cv::Mat& img);

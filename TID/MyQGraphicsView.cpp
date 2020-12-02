@@ -74,6 +74,10 @@ void MyQGraphicsView::setImage(const cv::Mat& imgFrame)
 void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
 {
     QPoint pt = toRelativePoint(event->pos(), this->size());
+    int x = static_cast<int>(pt.x() / 10000.0 * frame.cols);
+    int y = static_cast<int>(pt.y() / 10000.0 * frame.rows);
+    QPoint pt2(x, y);
+
     // 鼠标按下状态
     if (cpt != nullptr)
     {
@@ -81,7 +85,7 @@ void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
         dragPointFlag = true;
     }
     ptCache = pt;
-    emit mouseMoveSignal(pt);
+    emit mouseMoveSignal(pt, pt2);
 
     if (item != nullptr)
     {
@@ -273,7 +277,7 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
         if (item != nullptr)
         {
             static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-            item->update();
+            item->update();  // 调用paint成员函数
             emit updateJsonSignal(m_contour.toJsonString());
         }
         return;
@@ -292,6 +296,24 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
         info.insert("Width", imgSize.width);
         info.insert("Height", imgSize.height);
         emit openFileSignal(QJsonDocument(info).toJson(QJsonDocument::Compact));
+
+        return;
+    }
+
+    // xml文件
+    if (suffix == "xml")
+    {
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(nullptr, nullptr, "Can not open file\n" + filePath);
+            return;
+        }
+
+        auto bndboxes = getBndBox(&file);
+        file.close();
+        drawBox(bndboxes, frame);
+        setImage(frame);
 
         return;
     }

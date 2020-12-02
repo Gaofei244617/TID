@@ -82,9 +82,9 @@ void TID::clickOnViewBtn()
 }
 
 // label show point
-void TID::showPoint(const QPoint& pt)
+void TID::showPoint(const QPoint& pt, const QPoint& pt2)
 {
-    ui->label->setText(QString("[%1, %2]").arg(pt.x()).arg(pt.y()));
+    ui->label->setText(QString("[%1, %2]  Pixel:[%3, %4]").arg(pt.x()).arg(pt.y()).arg(pt2.x()).arg(pt2.y()));
 }
 
 void TID::clickOnOpenFile()

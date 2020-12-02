@@ -37,7 +37,7 @@ public:
 	void resizeEvent(QResizeEvent* event);        // Ëõ·ÅÊÂ¼þ
 
 signals:
-	void mouseMoveSignal(QPoint pt);
+	void mouseMoveSignal(QPoint pt, QPoint pt2);
 	void openFileSignal(QString str);
 	void updateJsonSignal(QString str);
 

@@ -16,6 +16,7 @@ protected:
 
 private:
     TIDContour m_contour;
+    QVector<>
     QVector<QPoint> m_mesureData;
     QVector<QPoint> vecPointCache;
     QPoint ptCache;
