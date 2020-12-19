@@ -21,7 +21,7 @@ ParamView::ParamView(QWidget* parent)
     QObject::connect(ui->exportButton, &QPushButton::clicked, this, &ParamView::clickOnExportBtn);
     QObject::connect(ui->editButton, &QPushButton::clicked, this, &ParamView::clickOnEditBtn);
     QObject::connect(ui->applyButton, &QPushButton::clicked, this, &ParamView::clickOnApplyBtn);
-    QObject::connect(buttonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &ParamView::formatContent);
+    QObject::connect(buttonGroup, &QButtonGroup::idClicked, this, &ParamView::formatContent);
 }
 
 void ParamView::setContent(const QString& str)

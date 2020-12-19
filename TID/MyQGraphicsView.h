@@ -17,7 +17,8 @@
 
 class MyQGraphicsView : public QGraphicsView
 {
-	Q_OBJECT 
+	Q_OBJECT
+
 public:
 	explicit MyQGraphicsView(QWidget* parent = nullptr);
 
@@ -41,8 +42,10 @@ signals:
 	void openFileSignal(QString str);
 	void updateJsonSignal(QString str);
 
-protected:
+public:
 	QGraphicsScene* scene;
+
+protected:
 	QGraphicsPixmapItem* pixItem;
 	QGraphicsItem* item;
 	QString filePath;

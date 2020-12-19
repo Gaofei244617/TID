@@ -491,3 +491,136 @@ QVector<BndBox> getBndBox(QFile* file, const QSize& size)
 
     return boxes;
 }
+
+// 计算两直线夹角(0~90°)
+double calAngle(const QLine& line1, const QLine& line2)
+{
+    const double PI = 3.141592654;
+    const double Error = 0.00001;
+    double x1 = line1.dx();
+    double y1 = line1.dy();
+    double x2 = line2.dx();
+    double y2 = line2.dy();
+
+    // 夹角余弦值
+    auto temp = (x1 * x2 + y1 * y2) / (std::sqrt(x1 * x1 + y1 * y1) * std::sqrt(x2 * x2 + y2 * y2));
+    // 处理浮点数误差
+    if (std::abs(temp) < Error)
+    {
+        return 90.0;
+    }
+    double theta = std::acos(temp) / PI * 180.0;
+    theta = theta > 90.0 ? 180.0 - theta : theta;
+    return theta;
+}
+
+// 两条线段是否首尾相连
+bool isBeside(const QLine& line1, const QLine& line2)
+{
+    bool ret = false;
+    if (line1.p1() == line2.p1() ||
+        line1.p1() == line2.p2() ||
+        line1.p2() == line2.p1() ||
+        line1.p2() == line2.p2())
+    {
+        ret = true;
+    }
+    return ret;
+}
+
+// 均分线段(返回值包含端点)
+std::vector<QPoint> divLine(const QLine& line, const int num)
+{
+    QPoint start = line.p1();
+    QPoint end = line.p2();
+    int x1 = start.x();
+    int y1 = start.y();
+    int dx = line.dx();
+    int dy = line.dy();
+
+    std::vector<QPoint> pts;
+    pts.reserve(num + 1);
+    pts.push_back(start);
+    for (int i = 1; i < num; i++)
+    {
+        pts.emplace_back(x1 + dx * i / num, y1 + dy * i / num);
+    }
+    pts.push_back(end);
+
+    return pts;
+}
+
+// 计算虚拟线圈
+QPolygon calVirtualLoop(const QPolygon& lane, const Direct& direct)
+{
+    const QLine laneDirect(direct.start, direct.end);  // 车道方向
+    std::vector<std::pair<QLine, double>> edges;
+    for (int i = 0, j = lane.size() - 1; i < lane.size(); i++)
+    {
+        QLine edge(lane[j], lane[i]);
+        edges.push_back(std::make_pair(edge, calAngle(edge, laneDirect)));
+        j = i;
+    }
+    using T = std::pair<QLine, double>;
+    std::sort(edges.begin(), edges.end(), [](const T& a, const T& b) {return a.second < b.second; }); // 升序
+    
+    QLine line1 = edges[0].first;
+    QLine line2 = edges[1].first;
+    // 避免与车道方向夹角最小的两条边是相邻的边
+    if (isBeside(line1, line2))
+    {
+        for (int i = 2; i < edges.size(); i++)
+        {
+            if (!isBeside(line1, edges[i].first))
+            {
+                line2 = edges[i].first;
+                break;
+            }
+        }
+    }
+
+    // 保证两条边端点在y方向上顺序相同
+    if (line1.y1() < line1.y2() != line2.y1() < line2.y2())
+    {
+        QPoint tmp = line2.p1();
+        line2 = QLine(line2.p2(), line2.p1());
+    }
+    int num = 50;
+    int w = num / 7;
+    if ((num - w) % 2 != 0)
+    {
+        w++;
+    }
+    auto pts1 = divLine(line1, num);
+    auto pts2 = divLine(line2, num);
+    QPoint pt1 = pts1.at((num - w) / 2);
+    QPoint pt2 = pts1.at((num - w) / 2 + w);
+
+    double ang = 0;
+    QPoint pt4;
+    for (const auto& pt : pts2)
+    {
+        double tmp = calAngle(QLine(pt1, pt), laneDirect);
+        if (tmp > ang)
+        {
+            ang = tmp;
+            pt4 = pt;
+        }
+    }
+
+    ang = 0;
+    QPoint pt3;
+    for (const auto& pt : pts2)
+    {
+        double tmp = calAngle(QLine(pt2, pt), laneDirect);
+        if (tmp > ang)
+        {
+            ang = tmp;
+            pt3 = pt;
+        }
+    }
+
+    QPolygon polygon({ pt1,pt2,pt3,pt4 });
+
+    return polygon;
+}

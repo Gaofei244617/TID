@@ -17,6 +17,7 @@ class TID : public QMainWindow
 
 public:
     TID(QWidget *parent = Q_NULLPTR);
+    void setHint(const QString& str);
 
 private:
     Ui::TIDClass* ui;

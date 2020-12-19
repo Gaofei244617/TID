@@ -94,3 +94,15 @@ QVector<BndBox> getBndBox(QFile* file);
 
 // 解析目标框(万分比相对坐标)
 QVector<BndBox> getBndBox(QFile* file, const QSize& size);
+
+// 计算两直线夹角(0~90°)
+double calAngle(const QLine& line1, const QLine& line2);
+
+// 两条线段是否首尾相连
+bool isBeside(const QLine& line1, const QLine& line2);
+
+// 均分线段(返回值包含端点)
+std::vector<QPoint> divLine(const QLine& line, const int num);
+
+// 计算虚拟线圈
+QPolygon calVirtualLoop(const QPolygon& lane, const Direct& direc);

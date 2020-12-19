@@ -187,7 +187,7 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
             y = box.ymin / 10000.0 * height;
             w = (box.xmax - box.xmin) / 10000.0 * width;
             h = (box.ymax - box.ymin) / 10000.0 * height;
-            QRect rect(x - 1, y - 17, 9 * box.name.size(), 17);
+            QRect rect(x - 1, y - 18, 9 * box.name.size(), 18);
 
             painter->setPen(QPen(Qt::red, 1.2, Qt::DashDotLine));
             painter->drawRect(x, y, w, h);
@@ -198,7 +198,7 @@ void MyQGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     }
 
     // ±ê³ßÏß
-    painter->setPen(QPen(Qt::gray, 0.5, Qt::DashDotLine));
+    painter->setPen(QPen(Qt::white, 0.4, Qt::DashDotLine));
     auto pt = toPixelPoint(ptCache, size);
     painter->drawLine(QPoint(0, pt.y()), QPoint(size.width(), pt.y()));
     painter->drawLine(QPoint(pt.x(), 0), QPoint(pt.x(), size.height()));
