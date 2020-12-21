@@ -57,7 +57,10 @@ void ParamView::formatContent(int format)
 
 void ParamView::clickOnExportBtn()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Json"), tr("param.json"), tr("Json Files (*.json)"));
+    QFileInfo fi(this->video_path);
+    auto dir = fi.path();
+    auto baseName = fi.completeBaseName();
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Json"), dir + "/" + baseName + ".json", tr("Json Files (*.json)"));
     if (!fileName.isNull())
     {
         QFile file(fileName);

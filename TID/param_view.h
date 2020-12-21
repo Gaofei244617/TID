@@ -20,6 +20,7 @@ public:
 
 public:
 	Ui::ParamView* ui;
+	QString video_path;
 
 private:
 	QButtonGroup* buttonGroup;

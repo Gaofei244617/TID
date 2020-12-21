@@ -71,6 +71,7 @@ void TID::onOpenVideo(const QString& info)
 
 	this->setWindowTitle(name);
 	paramView.setWindowTitle(name);
+	paramView.video_path = name;
 	ui->label2->setText(frameInfo);
 	ui->slider->setValue(0);
 }

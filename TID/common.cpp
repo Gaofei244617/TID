@@ -585,16 +585,11 @@ QPolygon calVirtualLoop(const QPolygon& lane, const Direct& direct)
         QPoint tmp = line2.p1();
         line2 = QLine(line2.p2(), line2.p1());
     }
-    int num = 50;
-    int w = num / 7;
-    if ((num - w) % 2 != 0)
-    {
-        w++;
-    }
+    int num = 60;
     auto pts1 = divLine(line1, num);
     auto pts2 = divLine(line2, num);
-    QPoint pt1 = pts1.at((num - w) / 2);
-    QPoint pt2 = pts1.at((num - w) / 2 + w);
+    QPoint pt1 = pts1.at(num * 2 / 6);
+    QPoint pt2 = pts1.at(num * 3 / 6);
 
     double ang = 0;
     QPoint pt4;
