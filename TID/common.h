@@ -83,6 +83,7 @@ QString JsonToPrettyString2(const rapidjson::Document& doc);
 
 // 查找最近点
 std::tuple<QPoint*, double> findPoint(const TIDContour& contour, const QPoint& pt);
+std::tuple<QPoint*, double> findPoint(const QVector<QPoint>& vecPt, const QPoint& pt);
 
 double square(const double num);
 

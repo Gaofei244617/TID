@@ -9,27 +9,27 @@
 
 MyQGraphicsView::MyQGraphicsView(QWidget* parent)
 	:QGraphicsView(parent),
-	scene(new MyQGraphicsScene(this)),
-	pixItem(nullptr),
-	item(nullptr),
-	frameNum(0),
-	drawMode("BusLane"),
-	cpt(nullptr),
-	dragPointFlag(false)
+	m_scene(new MyQGraphicsScene(this)),
+	m_pixItem(nullptr),
+	m_item(nullptr),
+	m_frameNum(0),
+	m_drawMode("BusLane"),
+	m_cpt(nullptr),
+	m_dragPointFlag(false)
 {
 	this->setStyleSheet("padding: 0px; border: 0px;");
-	this->setScene(scene);
+	this->setScene(m_scene);
 }
 
 void MyQGraphicsView::onSliderChangeed(int value)
 {
-	if (cap.isOpened())
+	if (m_cap.isOpened())
 	{
 		double val = value >= 1000 ? 999 : value;
-		double pos = val / 1000.0 * frameNum;
-		cap.set(CV_CAP_PROP_POS_FRAMES, pos);
-		cap >> frame;
-		setImage(frame);
+		double pos = val / 1000.0 * m_frameNum;
+		m_cap.set(CV_CAP_PROP_POS_FRAMES, pos);
+		m_cap >> m_frame;
+		setImage(m_frame);
 	}
 }
 
@@ -44,29 +44,29 @@ void MyQGraphicsView::setImage(const cv::Mat& imgFrame)
 	cv::cvtColor(img, img, CV_BGR2RGBA);//转换格式
 	QImage qImg = QImage(img.data, img.cols, img.rows, img.step, QImage::Format_RGBA8888);
 
-	scene->setSceneRect(0, 0, w, h);
+	m_scene->setSceneRect(0, 0, w, h);
 
 	// 背景图片
-	if (pixItem != nullptr)
+	if (m_pixItem != nullptr)
 	{
-		pixItem->setPixmap(QPixmap::fromImage(qImg));
-		pixItem->update();
+		m_pixItem->setPixmap(QPixmap::fromImage(qImg));
+		m_pixItem->update();
 	}
 	else
 	{
-		pixItem = scene->addPixmap(QPixmap::fromImage(qImg));
+		m_pixItem = m_scene->addPixmap(QPixmap::fromImage(qImg));
 	}
 
 	// 参数轮廓
-	if (item != nullptr)
+	if (m_item != nullptr)
 	{
-		item->update();
+		m_item->update();
 	}
 	else
 	{
-		item = new MyQGraphicsItem();
-		scene->addItem(item);
-		item->setPos(0, 0);
+		m_item = new MyQGraphicsItem();
+		m_scene->addItem(m_item);
+		m_item->setPos(0, 0);
 	}
 }
 
@@ -74,23 +74,23 @@ void MyQGraphicsView::setImage(const cv::Mat& imgFrame)
 void MyQGraphicsView::mouseMoveEvent(QMouseEvent* event)
 {
 	QPoint pt = toRelativePoint(event->pos(), this->size());
-	int x = static_cast<int>(pt.x() / 10000.0 * frame.cols);
-	int y = static_cast<int>(pt.y() / 10000.0 * frame.rows);
+	int x = static_cast<int>(pt.x() / 10000.0 * m_frame.cols);
+	int y = static_cast<int>(pt.y() / 10000.0 * m_frame.rows);
 	QPoint pt2(x, y);
 
 	// 鼠标按下状态
-	if (cpt != nullptr)
+	if (m_cpt != nullptr)
 	{
-		*cpt = pt;
-		dragPointFlag = true;
+		*m_cpt = pt;
+		m_dragPointFlag = true;
 	}
-	ptCache = pt;
+	m_ptCache = pt;
 	emit mouseMoveSignal(pt, pt2);
 
-	if (item != nullptr)
+	if (m_item != nullptr)
 	{
-		static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-		item->update();
+		static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+		m_item->update();
 		emit updateJsonSignal(m_contour.toJsonString());
 	}
 }
@@ -106,34 +106,43 @@ void MyQGraphicsView::mousePressEvent(QMouseEvent* event)
 	std::tie(point, dist) = findPoint(m_contour, pt);
 	if (dist < 100)
 	{
-		cpt = point;
+		m_cpt = point;
 	}
 }
 
 // 鼠标单击释放事件
 void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 {
-	cpt = nullptr;
-	if (item == nullptr)
+	m_cpt = nullptr;
+	if (m_item == nullptr)
 	{
 		return;
 	}
 
-	if (dragPointFlag)
+	if (m_dragPointFlag)
 	{
-		dragPointFlag = false;
+		m_dragPointFlag = false;
 		return;
 	}
 
-	QPoint point = event->pos();
+	QPoint point = toRelativePoint(event->pos(), this->size());
 	// 左键
 	if (event->button() == Qt::LeftButton)
 	{
-		vecPointCache.append(toRelativePoint(point, this->size()));
-		// 车道方向
-		if (drawMode == "direction" && vecPointCache.size() == 2)
+		// 多边形首尾闭合
+		double dist = 0xffff;
+		std::tie(std::ignore, dist) = findPoint(m_vecPointCache, point);
+		if (dist < 200)
 		{
-			Direct directLine(vecPointCache[0], vecPointCache[1]);
+			releaseOnRightBtn();
+			return;
+		}
+
+		m_vecPointCache.append(point);
+		// 车道方向
+		if (m_drawMode == "direction" && m_vecPointCache.size() == 2)
+		{
+			Direct directLine(m_vecPointCache[0], m_vecPointCache[1]);
 			int id = getLaneID(directLine, m_contour);
 			if (id != -1)
 			{
@@ -144,20 +153,20 @@ void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 					m_contour.lanes[id].virtualLoop = calVirtualLoop(m_contour.lanes[id].lane, directLine);
 				}
 			}
-			vecPointCache.clear();
+			m_vecPointCache.clear();
 		}
 
 		// 测量像素
-		if (drawMode == "mesure")
+		if (m_drawMode == "mesure")
 		{
 			m_mesureData.clear();
-			if (vecPointCache.size() == 2)
+			if (m_vecPointCache.size() == 2)
 			{
-				m_mesureData = vecPointCache;
-				vecPointCache.clear();
+				m_mesureData = m_vecPointCache;
+				m_vecPointCache.clear();
 
-				double dx = (m_mesureData[0].x() - m_mesureData[1].x()) / 10000.0 * frame.cols;
-				double dy = (m_mesureData[0].y() - m_mesureData[1].y()) / 10000.0 * frame.rows;
+				double dx = (m_mesureData[0].x() - m_mesureData[1].x()) / 10000.0 * m_frame.cols;
+				double dy = (m_mesureData[0].y() - m_mesureData[1].y()) / 10000.0 * m_frame.rows;
 				int len = static_cast<int>(sqrt(dx * dx + dy * dy));
 				QString s = QString::fromLocal8Bit("像素: %1 px  ").arg(len);
 				QMessageBox::about(nullptr, nullptr, s);
@@ -168,74 +177,27 @@ void MyQGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 			}
 		}
 
-		static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-		item->update();
+		static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+		m_item->update();
 		emit updateJsonSignal(m_contour.toJsonString());
 	}
 	// 右键
 	else if (event->button() == Qt::RightButton)
 	{
-		if (vecPointCache.size() <= 3)
-		{
-			vecPointCache.clear();
-			ptCache = QPoint(0, 0);
-			static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-			item->update();
-		}
-		else
-		{
-			if (drawMode == "BusLane" || drawMode == "EmergencyLane")
-			{
-				using T = std::pair<int, TIDLane>;
-				const auto lane = std::max_element(m_contour.lanes.begin(), m_contour.lanes.end(),
-					[](const T& a, const T& b) {return a.first < b.first; });
-				int laneID = (lane == m_contour.lanes.end()) ? 0 : lane->first + 1;
-				m_contour.lanes[laneID] = TIDLane();
-				m_contour.lanes[laneID].type = drawMode;
-				m_contour.lanes[laneID].lane = std::move(vecPointCache);
-				//if (m_contour.lanes[laneID].lane.size() != 4)
-				//{
-				//    QMessageBox::warning(nullptr, nullptr, QString::fromLocal8Bit("车道边数不为4"));
-				//}
-			}
-			else if (drawMode == "region")
-			{
-				using T = std::pair<int, TIDRegion>;
-				const auto region = std::max_element(m_contour.regions.begin(), m_contour.regions.end(),
-					[](const T& a, const T& b) {return a.first < b.first; });
-				int regionID = (region == m_contour.regions.end()) ? 0 : region->first + 1;
-
-				m_contour.regions[regionID] = TIDRegion();
-				m_contour.regions[regionID].region = std::move(vecPointCache);
-			}
-			else if (drawMode == "loop")
-			{
-				QPolygon loop(vecPointCache);
-				int id = getLaneID(loop, m_contour);
-				if (id != -1)
-				{
-					m_contour.lanes[id].virtualLoop = std::move(loop);
-				}
-			}
-			vecPointCache.clear();
-			ptCache = QPoint(0, 0);
-			static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-			item->update();
-			emit updateJsonSignal(m_contour.toJsonString());
-		}
+		releaseOnRightBtn();
 	}
 }
 
 // 缩放事件
 void MyQGraphicsView::resizeEvent(QResizeEvent* event)
 {
-	if (!frame.empty())
+	if (!m_frame.empty())
 	{
-		setImage(frame);
-		if (item != nullptr)
+		setImage(m_frame);
+		if (m_item != nullptr)
 		{
-			static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-			item->update();
+			static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+			m_item->update();
 		}
 	}
 }
@@ -249,8 +211,8 @@ void MyQGraphicsView::dragEnterEvent(QDragEnterEvent* event)
 void MyQGraphicsView::dropEvent(QDropEvent* event)
 {
 	const QMimeData* qm = event->mimeData();          // 获取MIMEData
-	filePath = qm->urls()[0].toLocalFile();           // 是获取拖动文件的本地路径
-	actionOnOpenFile(filePath);
+	m_filePath = qm->urls()[0].toLocalFile();           // 是获取拖动文件的本地路径
+	actionOnOpenFile(m_filePath);
 }
 
 void MyQGraphicsView::actionOnOpenFile(QString filePath)
@@ -280,10 +242,10 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
 			return;
 		}
 		setContour(text);
-		if (item != nullptr)
+		if (m_item != nullptr)
 		{
-			static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-			item->update();  // 调用paint成员函数
+			static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+			m_item->update();  // 调用paint成员函数
 			emit updateJsonSignal(m_contour.toJsonString());
 		}
 		return;
@@ -292,11 +254,11 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
 	// 图片文件
 	if (suffix == "jpg" || suffix == "bmp" || suffix == "png")
 	{
-		frame = cv::imread(filePath.toStdString());
-		setImage(frame);
+		m_frame = cv::imread(filePath.toStdString());
+		setImage(m_frame);
 
 		QJsonObject info;
-		cv::Size imgSize = frame.size();
+		cv::Size imgSize = m_frame.size();
 		info.insert("Name", filePath);
 		info.insert("FileType", "Image");
 		info.insert("Width", imgSize.width);
@@ -316,11 +278,11 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
 			return;
 		}
 
-		if (item != nullptr)
+		if (m_item != nullptr)
 		{
-			auto bndboxes = getBndBox(&file, QSize(frame.cols, frame.rows));
-			static_cast<MyQGraphicsItem*>(item)->setObjBox(bndboxes);
-			item->update();  // 调用paint成员函数
+			auto bndboxes = getBndBox(&file, QSize(m_frame.cols, m_frame.rows));
+			static_cast<MyQGraphicsItem*>(m_item)->setObjBox(bndboxes);
+			m_item->update();  // 调用paint成员函数
 			emit updateJsonSignal(m_contour.toJsonString());
 		}
 
@@ -329,44 +291,44 @@ void MyQGraphicsView::actionOnOpenFile(QString filePath)
 	}
 
 	// 视频文件
-	if (cap.isOpened())
+	if (m_cap.isOpened())
 	{
-		cap.release();
+		m_cap.release();
 	}
 
-	cap.open(filePath.toStdString());
-	if (!cap.isOpened())
+	m_cap.open(filePath.toStdString());
+	if (!m_cap.isOpened())
 	{
 		QMessageBox::about(nullptr, nullptr, "fail to open file");
 		return;
 	}
-	frameNum = cap.get(CV_CAP_PROP_FRAME_COUNT);
-	auto fps = cap.get(CV_CAP_PROP_FPS);
-	auto width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	auto height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-	cap >> frame;
-	setImage(frame);
+	m_frameNum = m_cap.get(CV_CAP_PROP_FRAME_COUNT);
+	auto fps = m_cap.get(CV_CAP_PROP_FPS);
+	auto width = m_cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	auto height = m_cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	m_cap >> m_frame;
+	setImage(m_frame);
 
 	QJsonObject info;
 	info.insert("Name", filePath);
 	info.insert("FileType", "Video");
-	info.insert("FrameCount", frameNum);
+	info.insert("FrameCount", m_frameNum);
 	info.insert("FPS", fps);
 	info.insert("Width", width);
 	info.insert("Height", height);
-	info.insert("Time", round(frameNum / fps * 100.0 / 60.0) / 100.0);  // 视频时长(min)
+	info.insert("Time", round(m_frameNum / fps * 100.0 / 60.0) / 100.0);  // 视频时长(min)
 	emit openFileSignal(QJsonDocument(info).toJson(QJsonDocument::Compact));
 }
 
 void MyQGraphicsView::setContour(const QString& str)
 {
 	m_contour = getTIDContour(str);
-	vecPointCache.clear();
-	ptCache = QPoint(0, 0);
-	if (item != nullptr)
+	m_vecPointCache.clear();
+	m_ptCache = QPoint(0, 0);
+	if (m_item != nullptr)
 	{
-		static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-		item->update();
+		static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+		m_item->update();
 	}
 	else
 	{
@@ -377,7 +339,7 @@ void MyQGraphicsView::setContour(const QString& str)
 // 获取当前视频帧
 cv::Mat MyQGraphicsView::getCurrentFrame()const
 {
-	return this->frame;
+	return this->m_frame;
 }
 
 // 设置绘图模式
@@ -386,25 +348,25 @@ void MyQGraphicsView::setRegionMode(const int mode)
 	switch (mode)
 	{
 	case 0:
-		drawMode = "BusLane";
+		m_drawMode = "BusLane";
 		break;
 	case 1:
-		drawMode = "EmergencyLane";
+		m_drawMode = "EmergencyLane";
 		break;
 	case 2:
-		drawMode = "region";
+		m_drawMode = "region";
 		break;
 	case 3:
-		drawMode = "direction";
+		m_drawMode = "direction";
 		break;
 	case 4:
-		drawMode = "loop";
+		m_drawMode = "loop";
 		break;
 	case 5:
-		drawMode = "mesure";
+		m_drawMode = "mesure";
 		break;
 	default:
-		drawMode = "";
+		m_drawMode = "";
 	}
 }
 
@@ -413,13 +375,66 @@ void MyQGraphicsView::clearContour()
 {
 	m_contour.lanes.clear();
 	m_contour.regions.clear();
-	vecPointCache.clear();
-	ptCache = QPoint(0, 0);
-	if (item != nullptr)
+	m_vecPointCache.clear();
+	m_ptCache = QPoint(0, 0);
+	if (m_item != nullptr)
 	{
-		static_cast<MyQGraphicsItem*>(item)->updateParam(drawMode, m_contour, m_mesureData, vecPointCache, ptCache);
-		static_cast<MyQGraphicsItem*>(item)->setObjBox(QVector<BndBox>());
-		item->update();
+		static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+		static_cast<MyQGraphicsItem*>(m_item)->setObjBox(QVector<BndBox>());
+		m_item->update();
+		emit updateJsonSignal(m_contour.toJsonString());
+	}
+}
+
+// 鼠标右键释放响应函数
+void MyQGraphicsView::releaseOnRightBtn()
+{
+	if (m_vecPointCache.size() <= 3)
+	{
+		m_vecPointCache.clear();
+		m_ptCache = QPoint(0, 0);
+		static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+		m_item->update();
+	}
+	else
+	{
+		if (m_drawMode == "BusLane" || m_drawMode == "EmergencyLane")
+		{
+			using T = std::pair<int, TIDLane>;
+			const auto lane = std::max_element(m_contour.lanes.begin(), m_contour.lanes.end(),
+				[](const T& a, const T& b) {return a.first < b.first; });
+			int laneID = (lane == m_contour.lanes.end()) ? 0 : lane->first + 1;
+			m_contour.lanes[laneID] = TIDLane();
+			m_contour.lanes[laneID].type = m_drawMode;
+			m_contour.lanes[laneID].lane = std::move(m_vecPointCache);
+			//if (m_contour.lanes[laneID].lane.size() != 4)
+			//{
+			//    QMessageBox::warning(nullptr, nullptr, QString::fromLocal8Bit("车道边数不为4"));
+			//}
+		}
+		else if (m_drawMode == "region")
+		{
+			using T = std::pair<int, TIDRegion>;
+			const auto region = std::max_element(m_contour.regions.begin(), m_contour.regions.end(),
+				[](const T& a, const T& b) {return a.first < b.first; });
+			int regionID = (region == m_contour.regions.end()) ? 0 : region->first + 1;
+
+			m_contour.regions[regionID] = TIDRegion();
+			m_contour.regions[regionID].region = std::move(m_vecPointCache);
+		}
+		else if (m_drawMode == "loop")
+		{
+			QPolygon loop(m_vecPointCache);
+			int id = getLaneID(loop, m_contour);
+			if (id != -1)
+			{
+				m_contour.lanes[id].virtualLoop = std::move(loop);
+			}
+		}
+		m_vecPointCache.clear();
+		m_ptCache = QPoint(0, 0);
+		static_cast<MyQGraphicsItem*>(m_item)->updateParam(m_drawMode, m_contour, m_mesureData, m_vecPointCache, m_ptCache);
+		m_item->update();
 		emit updateJsonSignal(m_contour.toJsonString());
 	}
 }
